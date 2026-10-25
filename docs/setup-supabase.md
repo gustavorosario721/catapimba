@@ -35,9 +35,12 @@ em persistência nem transforma esse seletor em autenticação.
 
 ## Ativação Google — ação no painel
 
-A última consulta a `/auth/v1/settings` confirmou `external.google = false`.
+Após a configuração pelo responsável, `/auth/v1/settings` confirmou
+`external.google = true`. O usuário confirmou o login Google no preview e apresentou
+a tela Minha conta com a identidade validada pela API. O logout/relogin ainda
+depende de confirmação explícita do usuário.
 A conexão Supabase disponível não inclui alteração das credenciais do provedor.
-Não considerar o login concluído até testar uma entrada real após essa configuração.
+A entrada real já foi observada; as instruções abaixo documentam a configuração.
 
 1. Abra o [projeto Supabase](https://supabase.com/dashboard/project/sahxhhbpagnygnpjtfxz).
 2. Em Authentication, abra os provedores de login e selecione Google.
@@ -79,4 +82,13 @@ Após a primeira entrada real, identificar o UUID correto em Authentication/User
 O arquivo `supabase/bootstrap-superadmin.sql` é um procedimento de operador via
 psql com conexão privilegiada, nunca um endpoint público. Exige UUID explícito,
 não reativa concessões revogadas e registra uma nova concessão na auditoria.
-Ainda não foi executado: nenhuma pessoa recebeu privilégio de plataforma.
+O primeiro bootstrap foi executado em 25/10/2026, após autorização do responsável
+e verificação da conta Google confirmada. A concessão por UUID e o evento de
+auditoria foram gravados na mesma transação. Há exatamente uma concessão ativa e
+um evento de bootstrap. Os testes no banco confirmaram visibilidade própria,
+isolamento de outra identidade, bloqueio de autopromoção e revogação efetiva; a
+revogação de teste foi revertida, preservando o administrador ativo.
+
+A interface desta entrega apenas identifica a concessão em Minha conta. O painel
+administrativo real e suas operações serão implementados na próxima entrega;
+a tela Superadmin demonstrativa continua usando dados fictícios.

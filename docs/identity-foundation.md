@@ -1,7 +1,7 @@
 # Base de identidade e isolamento institucional
 
-Estado: fundação de banco e código implementada; provedor Google ainda pendente
-de configuração e teste real. Consulte [setup-supabase.md](setup-supabase.md) para
+Estado: fundação de banco e código implementada; provedor Google habilitado,
+entrada real confirmada pelo usuário e primeiro bootstrap administrativo auditado. Consulte [setup-supabase.md](setup-supabase.md) para
 as evidências e os limites desta entrega. O protótipo continua demonstrativo.
 
 ## Escopo da primeira entrega
