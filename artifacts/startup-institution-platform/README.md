@@ -27,11 +27,11 @@ pnpm --filter @workspace/startup-institution-platform run typecheck
 - A exportação de relatórios gera um CSV de demonstração no navegador.
 - O som do pódio é gerado localmente e não depende de serviços externos.
 
-## Próximos passos para produção
+## Arquitetura aprovada
 
-Substituir os dados locais por consultas a uma API e PostgreSQL, integrar
-Supabase Auth e definir autorização por vínculo entre usuário, instituição e
-papel. A autenticação demonstrativa não deve ser reaproveitada como mecanismo
-de segurança. O scaffold atual deste protótipo usa React + Vite; a solicitação
-original cita Next.js com App Router, portanto uma versão de produção que exija
-esse stack ainda precisará ser portada.
+Preservar React + Vite e Express, com implantação futura em um único projeto
+Vercel. Usar Supabase para PostgreSQL e autenticação. O fluxo inicial recomendado
+é Google OAuth via Supabase Auth; estar autenticado não concede acesso a uma
+instituição sem vínculo aprovado. Essas integrações ainda não estão implementadas.
+
+Consulte o [README da raiz](../../README.md) para instalação e verificação.

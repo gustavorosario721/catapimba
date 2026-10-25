@@ -1,45 +1,19 @@
-# [Project name]
+# Plataforma de Gestão e Avaliação de Startups
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Consulte o [README](README.md) para execução, estrutura e decisões atuais.
 
-## Run & Operate
+- Frontend: React + Vite; porta padrão 5173 e caminho padrão `/`.
+- Sandbox auxiliar: porta padrão 5174.
+- API: Express 5, requer `PORT` na execução, por exemplo `PORT=3001`.
+- Build do servidor: esbuild, bundle ESM (`dist/index.mjs`).
+- Banco: PostgreSQL + Drizzle; esquema vazio. `DATABASE_URL` é necessária para
+  usar a conexão ou ferramentas de banco, não para o health check.
+- OpenAPI/Orval: gera cliente React Query e schemas Zod; somente health check.
+- Decisão aprovada: Vite + Express no mesmo projeto Vercel e Supabase PostgreSQL/Auth.
+- Login Google via Supabase Auth é o fluxo inicial recomendado. Papéis e aprovação
+  serão verificados no servidor por vínculo institucional.
+- Implantação integrada, autenticação e persistência ainda não estão implementadas.
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
-
-## Stack
-
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
-
-## Where things live
-
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
-
-## Architecture decisions
-
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+Preservar o protótipo e evoluir em etapas pequenas. Não tratar o seletor da demo
+como autenticação, não conceder superadministrador por cadastro público e não
+expor credenciais. Não executar alterações do esquema antes da etapa correspondente.
