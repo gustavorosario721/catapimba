@@ -54,7 +54,6 @@ export const navItems = [
   {label:'Projetos',href:'/projetos',icon:'Lightbulb',group:'Espaço'},
   {label:'Bancas',href:'/bancas',icon:'PanelsTopLeft',group:'Avaliação'},
   {label:'Critérios',href:'/criterios',icon:'ListChecks',group:'Avaliação'},
-  {label:'Permissões',href:'/permissoes',icon:'ShieldCheck',group:'Configuração'},
   {label:'Orientação',href:'/orientacao',icon:'GraduationCap',group:'Minha área'},
   {label:'Avaliações',href:'/avaliacoes',icon:'ClipboardCheck',group:'Minha área'},
   {label:'Resultados',href:'/resultados',icon:'ChartNoAxesCombined',group:'Análise'},

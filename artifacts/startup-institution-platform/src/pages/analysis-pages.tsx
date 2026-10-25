@@ -9,18 +9,10 @@ import type {
   DemoAssessment,
   DemoUser,
   Project,
-  Role,
 } from '../demo-data';
 import { events } from '../demo-data';
 import { Btn, Card, PageHead, Stat } from '../components/prototype-ui';
 
-const permissionColumns = [
-  'Projetos',
-  'Bancas',
-  'Avaliações',
-  'Usuários',
-  'Resultados',
-];
 const formatScore = (score: number) =>
   score.toLocaleString('pt-BR', {
     minimumFractionDigits: 1,
@@ -28,83 +20,6 @@ const formatScore = (score: number) =>
   });
 
 type DemoEvent = (typeof events)[number];
-
-export function PermissionsPage({
-  roles,
-  permissions,
-  defaults,
-  setPermissions,
-  notify,
-}: {
-  roles: Role[];
-  permissions: Record<string, boolean>;
-  defaults: Record<string, boolean>;
-  setPermissions: (value: Record<string, boolean>) => void;
-  notify: (message: string) => void;
-}) {
-  return (
-    <>
-      <PageHead
-        eyebrow="CONFIGURAÇÃO INSTITUCIONAL"
-        title="Permissões"
-        description="Uma visão configurável para demonstrar os escopos por perfil."
-      />
-      <div className="notice warn">
-        Esta matriz é apenas visual. A troca de perfil não representa controle
-        real de autorização.
-      </div>
-      <Card>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Perfil</th>
-                {permissionColumns.map((column) => (
-                  <th key={column}>{column}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {roles.map((role) => (
-                <tr key={role}>
-                  <td>
-                    <strong>{role}</strong>
-                  </td>
-                  {permissionColumns.map((column, index) => {
-                    const key = `${role}:${index}`;
-                    const allowed = permissions[key] ?? defaults[key] ?? false;
-                    return (
-                      <td key={column}>
-                        <button
-                          aria-label={`${allowed ? 'Restringir' : 'Permitir'} ${column} para ${role}`}
-                          data-testid={`button-permission-${role}-${index}`}
-                          aria-pressed={allowed}
-                          onClick={() => {
-                            setPermissions({
-                              ...permissions,
-                              [key]: !allowed,
-                            });
-                            notify(
-                              `${column} ${allowed ? 'restrito' : 'permitido'} para ${role} nesta sessão.`,
-                            );
-                          }}
-                          className="btn btn-ghost"
-                          style={{ fontSize: 10, padding: '6px 8px' }}
-                        >
-                          {allowed ? 'Permitido' : 'Restrito'}
-                        </button>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    </>
-  );
-}
 
 export function ResultsPage({
   projects,
