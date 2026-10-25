@@ -36,7 +36,7 @@ O health check confirma apenas o processo, sem consultar banco. Para a área rea
 
 O frontend local encaminha `/api` para o Express. Em Vercel, `vercel.json` direciona `/api/*` à função `api/index.mjs` e as rotas da interface à SPA. A raiz do projeto Vercel é a raiz deste monorepo. Não existe servidor separado no Render.
 
-A branch padrão do código é `main`. O preview autenticado existente usa `feat/identity-foundation`. O deploy automático da `main` está desativado em `vercel.json` até autorização explícita de publicação. Produção precisa de variáveis e callbacks próprios. Autorização de plataforma é concedida por procedimento controlado, nunca por cadastro público; não use metadados de perfil para conceder privilégios.
+O código refinado está na branch `main`. O preview autenticado existente usa `feat/identity-foundation`. O deploy automático da `main` está desativado em `vercel.json` até autorização explícita de publicação. Produção precisa de variáveis e callbacks próprios. Autorização de plataforma é concedida por procedimento controlado, nunca por cadastro público; não use metadados de perfil para conceder privilégios.
 
 ## Verificação
 

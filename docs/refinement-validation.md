@@ -113,3 +113,9 @@ A `main` foi criada com o código validado e todo o histórico ancestral. As bra
 anteriores foram preservadas. O bloqueio de deploy automático da `main` é uma medida
 para respeitar a instrução de não publicar em produção sem autorização; pode ser
 removido quando a implantação for autorizada e suas variáveis/OAuth estiverem prontos.
+
+A criação e o push da `main` foram confirmados no GitHub. A tentativa de alterar
+a branch padrão via API retornou HTTP 403 (`Resource not accessible by integration`).
+Esse ajuste permanece pendente no painel Settings → General → Default branch.
+A branch padrão observada após a tentativa ainda é `replit-agent`. Não houve deploy
+da `main`, conforme a consulta de implantações da Vercel.
