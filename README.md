@@ -60,7 +60,7 @@ O build da API gera `artifacts/api-server/dist/index.mjs` (ESM).
 
 ## Arquitetura aprovada
 
-Preservar Vite + Express e implantar ambos em um único projeto Vercel. A configuração está em `vercel.json` e a entrada da função está em `api/index.ts`.
+Preservar Vite + Express e implantar ambos em um único projeto Vercel. A configuração está em `vercel.json` e a entrada da função está em `api/index.mjs`.
 O preview remoto ainda precisa ser publicado e verificado. Não há deploy validado.
 
 Usar Supabase PostgreSQL e Auth. O fluxo inicial recomendado é Google OAuth para
@@ -88,7 +88,7 @@ inatividade. Verificar condições atuais antes de habilitar recursos pagos.
 ## Verificação e próxima etapa
 
 `pnpm run build` verifica tipos e compila as aplicações, inclusive o sandbox.
-Os testes de roteamento da API estão em `api/routing.test.ts` (`pnpm test:routing`).
+Os testes de roteamento da API estão em `scripts/src/api-routing.test.mjs` (`pnpm test:routing`).
 Ainda não existem testes de negócio ou navegador. Build e typecheck não comprovam
 segurança, conexão de banco ou deploy.
 
@@ -99,8 +99,7 @@ Use Node.js 24 e o preset Vite. `vercel.json` define instalação com lockfile,
 `pnpm run build:vercel` e o diretório de saída. Esse build verifica bibliotecas,
 API e frontend principal; não compila o sandbox auxiliar.
 
-`api/index.ts` exporta o Express sem iniciar listener. A Vercel compila essa função
-separadamente do bundle local. `/api/*` vai para a função; os demais caminhos da
+`api/index.mjs` exporta o Express sem iniciar listener. O esbuild gera `dist/app.mjs` antes de a Vercel empacotar a função. `/api/*` vai para a função; os demais caminhos da
 interface recebem `index.html`, preservando arquivos estáticos. `/assets/*` não
 recebe o fallback da SPA, para que assets inexistentes retornem 404.
 
