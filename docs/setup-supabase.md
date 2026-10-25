@@ -89,6 +89,32 @@ um evento de bootstrap. Os testes no banco confirmaram visibilidade própria,
 isolamento de outra identidade, bloqueio de autopromoção e revogação efetiva; a
 revogação de teste foi revertida, preservando o administrador ativo.
 
-A interface desta entrega apenas identifica a concessão em Minha conta. O painel
-administrativo real e suas operações serão implementados na próxima entrega;
-a tela Superadmin demonstrativa continua usando dados fictícios.
+A interface em Minha conta inclui o painel real de instituições para a concessão
+administrativa. A tela Superadmin da demonstração permanece fictícia e separada.
+
+## Painel real de instituições
+
+A conta superadministradora agora recebe o painel em `/conta`, mesmo sem vínculo
+institucional. A mensagem de vínculo pendente fica restrita às demais contas.
+O painel lista, cria, suspende e reativa instituições persistidas no Supabase.
+
+`GET/POST /api/admin/institutions` e `PATCH /api/admin/institutions/:id` validam a
+identidade e a concessão atual no servidor. As mutações usam RPCs com a identidade
+do usuário; não usam service-role. Os wrappers públicos são SECURITY INVOKER e as
+implementações privilegiadas ficam no schema privado, com search_path vazio,
+checagem de auth.uid(), bloqueio compartilhado da concessão ativa e EXECUTE limitado.
+Não há grant direto de escrita nas tabelas. Cada alteração e seu evento de auditoria
+são atômicos; reaplicar o mesmo status não duplica o histórico.
+
+As migrations `platform_institutions` e `isolate_platform_operations` foram aplicadas
+e alinhadas às versões do histórico remoto. `supabase/tests/platform-institutions.sql`
+passou no banco real com fixtures desfeitas, incluindo negação a anônimos, usuários
+comuns e administradores revogados, validação de entradas e auditoria. Os 11 testes
+HTTP usam um Supabase simulado para isolar a autorização da API. O teste Chromium
+móvel usa respostas simuladas para verificar o fluxo de interface e a ausência do
+bloqueio por vínculo; isso não representa uma sessão real do administrador no browser
+do agente. A validação final com a conta Google do responsável ocorre no preview.
+
+O advisor não aponta mais RPCs privilegiadas no schema exposto. A auditoria privada
+permanece sem políticas de leitura pública por intenção; o aviso de proteção contra
+senhas vazadas no Auth é independente destas operações e não foi alterado.

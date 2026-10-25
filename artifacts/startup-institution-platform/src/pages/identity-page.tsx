@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import type { Session } from '@supabase/supabase-js';
 import { isGoogleEnabled, supabase } from '../lib/supabase';
+import { PlatformPanel } from './platform-panel';
 import { Btn, Logo } from '../components/prototype-ui';
 
 type Identity = {
@@ -95,9 +96,9 @@ export function IdentityPage({ mode }: { mode: 'login' | 'callback' | 'account' 
 
   return <main className="auth-page">
     <header className="public-nav"><Link href="/"><Logo /></Link><Link href="/">Voltar ao início</Link></header>
-    <section className="auth-card">
+    <section className="auth-card" style={identity?.isPlatformAdministrator ? { width: 'min(900px, calc(100% - 32px))', maxWidth: 900 } : undefined}>
       <span className="eyebrow">ACESSO À PLATAFORMA</span>
-      <h1>{mode === 'account' ? 'Minha conta' : mode === 'callback' ? 'Concluindo seu acesso' : 'Entrar na plataforma'}</h1>
+      <h1>{mode === 'account' ? (identity?.isPlatformAdministrator ? 'Administração da plataforma' : 'Minha conta') : mode === 'callback' ? 'Concluindo seu acesso' : 'Entrar na plataforma'}</h1>
       {error && <p role="alert">{error}</p>}
       {!supabase ? <p>O acesso à plataforma ainda está sendo configurado.</p>
         : loading ? <p role="status">Verificando sua sessão…</p>
@@ -105,13 +106,13 @@ export function IdentityPage({ mode }: { mode: 'login' | 'callback' | 'account' 
           {!identity && !error && <p role="status">Consultando seus vínculos…</p>}
           {identity && <>
             <p>{identity.user.email}</p>
-            {identity.isPlatformAdministrator && <p>Seu acesso de administração da plataforma foi concedido pelo procedimento controlado.</p>}
-            {identity.memberships.length === 0 ? <p>Você ainda não possui vínculo com uma instituição. Aguarde um administrador vincular sua conta. O cadastro e a aprovação de acessos serão disponibilizados na próxima etapa.</p>
+            {identity.isPlatformAdministrator && <PlatformPanel token={session.access_token} />}
+            {!identity.isPlatformAdministrator && (identity.memberships.length === 0 ? <p>Você ainda não possui vínculo com uma instituição. Aguarde um administrador vincular sua conta. O cadastro e a aprovação de acessos serão disponibilizados na próxima etapa.</p>
               : <ul>{identity.memberships.map(m => <li key={m.id}>
                 <strong>{m.institutions?.name ?? 'Instituição indisponível'}</strong> — {statuses[m.status] ?? m.status}
                 {m.institutions?.status === 'suspended' && <span> · Instituição suspensa</span>}
                 {m.status === 'active' && m.institutions?.status === 'active' && <span> · Vínculo ativo. A área institucional será disponibilizada na próxima etapa.</span>}
-              </li>)}</ul>}
+              </li>)}</ul>)}
           </>}
           {error && <Btn kind="ghost" onClick={() => setAttempt(v => v + 1)}>Tentar novamente</Btn>}
           <button className="btn btn-primary" disabled={busy} onClick={signOut}>Sair da conta</button>

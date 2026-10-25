@@ -11,6 +11,60 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /admin/institutions:
+    get:
+      operationId: listPlatformInstitutions
+      summary: Lista instituições para superadministrador sem exigir vínculo institucional
+      security: [{bearerAuth: []}]
+      responses:
+        "200": {description: Instituições visíveis à administração da plataforma}
+        "401": {description: Sessão inválida}
+        "403": {description: Privilégio de plataforma ausente ou revogado}
+    post:
+      operationId: createPlatformInstitution
+      summary: Cria instituição e auditoria atomicamente
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name]
+              properties:
+                name: {type: string, minLength: 1, maxLength: 200}
+      responses:
+        "201": {description: Instituição criada}
+        "400": {description: Entrada inválida}
+        "401": {description: Sessão inválida}
+        "403": {description: Privilégio de plataforma ausente ou revogado}
+  /admin/institutions/{id}:
+    patch:
+      operationId: setPlatformInstitutionStatus
+      summary: Suspende ou ativa instituição com auditoria atômica
+      security: [{bearerAuth: []}]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [status]
+              properties:
+                status: {type: string, enum: [active, suspended]}
+      responses:
+        "200": {description: Instituição atualizada}
+        "400": {description: Entrada inválida}
+        "401": {description: Sessão inválida}
+        "403": {description: Privilégio de plataforma ausente ou revogado}
+        "404": {description: Instituição inexistente}
   /auth/me:
     get:
       operationId: getIdentity
