@@ -3,7 +3,7 @@ export type Project = { id: number; name: string; summary: string; category: str
 export type DemoUser = { id: number; name: string; email: string };
 export type DemoMembership = { id: number; userId: number; institution: string; role: Role; status: 'Ativo' | 'Pendente' | 'Suspenso' };
 export type DemoInstitution = { id: number; name: string; location: string; status: 'Ativa' | 'Suspensa' };
-export type DemoAssessment = { id: number; projectId: number; evaluatorId: number; scores: number[]; average: number; receipt: string };
+export type DemoAssessment = { id: number; projectId: number; evaluatorId: number; scores: number[]; average: number; notes: string; receipt: string };
 export const roles: Role[] = ['Superadministrador','Administrador institucional','Coordenador','Orientador','Avaliador','Aluno'];
 export const institutions = ['Instituto Horizonte','Universidade do Vale','Incubadora Farol'];
 export const initialInstitutions: DemoInstitution[] = institutions.map((name,id)=>({id:id+1,name,location:['São Paulo, SP','Campinas, SP','Recife, PE'][id],status:'Ativa'}));
