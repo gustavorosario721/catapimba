@@ -23,7 +23,7 @@ export function PublicHome() {
             Solicitar acesso
           </Link>
           <Link href="/login" className="btn btn-primary">
-            <LogIn size={15} /> Entrar na demo
+            <LogIn size={15} /> Entrar
           </Link>
         </div>
       </header>
@@ -158,8 +158,8 @@ export function PublicHome() {
               clareza para cada pessoa.
             </p>
           </div>
-          <Link href="/login" className="btn btn-primary">
-            Entrar na demonstração <ArrowRight size={15} />
+          <Link href="/instituicao" className="btn btn-primary">
+            Explorar demonstração <ArrowRight size={15} />
           </Link>
         </div>
       </section>
@@ -229,7 +229,7 @@ export function AuthPage({
         ) : kind === 'login' ? (
           <div>
             <Btn onClick={() => setLocation('/instituicao')}>
-              Entrar na demonstração <ArrowRight size={15} />
+              Explorar demonstração <ArrowRight size={15} />
             </Btn>
           </div>
         ) : (

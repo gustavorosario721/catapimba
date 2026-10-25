@@ -1,8 +1,8 @@
 # Base de identidade e isolamento institucional
 
-Estado: desenho para a próxima implementação, ainda sem migrations aplicadas,
-provedor Google configurado ou autenticação real. Não é uma declaração de segurança
-do protótipo existente.
+Estado: fundação de banco e código implementada; provedor Google ainda pendente
+de configuração e teste real. Consulte [setup-supabase.md](setup-supabase.md) para
+as evidências e os limites desta entrega. O protótipo continua demonstrativo.
 
 ## Escopo da primeira entrega
 
