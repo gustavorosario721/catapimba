@@ -32,11 +32,9 @@ catalog:
 
 autoInstallPeers: false
 
-onlyBuiltDependencies:
-  - '@swc/core'
-  - esbuild
-  - msw
-  - unrs-resolver
+# pnpm 11: permit only the pinned bundler installation script.
+allowBuilds:
+  esbuild@0.28.2: true
 
 overrides:
   "proxy-addr@^2": "^2.0.8"
