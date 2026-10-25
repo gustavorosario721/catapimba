@@ -117,7 +117,7 @@ function App() {
   if(path==='/permissoes')return <Redirect to="/projetos"/>;
   if(path==='/login')return <IdentityPage mode="login"/>;
   if(path==='/auth/callback')return <IdentityPage mode="callback"/>;
-  if(path==='/conta')return <IdentityPage mode="account"/>;
+  if(path==='/conta'||path.startsWith('/app/'))return <IdentityPage mode="account"/>;
   if(path==='/solicitar-acesso')return <AuthPage kind="request"/>;
   if(path==='/recuperar-senha')return <AuthPage kind="recover"/>;
   return <Switch><Route path="*"><DemoApp path={path} membershipId={membershipId} setMembershipId={setMembershipId} memberships={memberships} setMemberships={setMemberships} institutionRecords={institutionRecords} setInstitutionRecords={setInstitutionRecords} users={users} setUsers={setUsers} assessments={assessments} setAssessments={setAssessments}/></Route></Switch>;
