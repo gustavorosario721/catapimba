@@ -10,7 +10,7 @@ identityRouter.get('/auth/me', async (req, res) => {
   try {
     const [memberships, platform] = await Promise.all([
       client.from('institution_memberships')
-        .select('id,status,institution_id,institutions(id,name,status),membership_roles(role)')
+        .select('id,status,requested_role,institution_id,institutions(id,name,status),membership_roles(role)')
         .eq('user_id', user.id),
       client.from('platform_administrators').select('user_id').eq('user_id', user.id).is('revoked_at', null),
     ]);
