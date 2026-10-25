@@ -1,0 +1,193 @@
+import { useState, type FormEvent } from "react";
+import type { Command, WorkspaceData } from "./types";
+import { Card, Empty, InputField, SaveButton, score, dateTime } from "./ui";
+
+export function EvaluationsModule({
+  data,
+  command,
+  busy,
+  userId,
+}: {
+  data: WorkspaceData;
+  command: Command;
+  busy: boolean;
+  userId: string;
+}) {
+  const [eventId, setEventId] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [scores, setScores] = useState<Record<string, number>>({});
+  const [notes, setNotes] = useState("");
+  const [receipt, setReceipt] = useState("");
+  const assigned = data.events.filter(
+    (ev) =>
+      data.eventEvaluators.some(
+        (ee) => ee.event_id === ev.id && ee.user_id === userId,
+      ) && ev.status !== "cancelled",
+  );
+  const event = assigned.find((e) => e.id === eventId);
+  const projects = data.projects.filter((p) =>
+    data.eventProjects.some(
+      (ep) => ep.event_id === eventId && ep.project_id === p.id,
+    ),
+  );
+  function chooseProject(id: string) {
+    setProjectId(id);
+    setReceipt("");
+    const previous = data.evaluations.find(
+      (e) =>
+        e.event_id === eventId &&
+        e.project_id === id &&
+        e.evaluator_id === userId,
+    );
+    setScores(previous?.scores ?? {});
+    setNotes(previous?.notes ?? "");
+  }
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (
+      await command("evaluation.submit", {
+        event_id: eventId,
+        project_id: projectId,
+        scores,
+        notes,
+      })
+    ) {
+      setReceipt(
+        "Avaliação registrada. Você pode revisá-la enquanto a banca estiver aberta.",
+      );
+    }
+  }
+  return (
+    <>
+      <Card>
+        <h2 className="section-title">Minhas avaliações</h2>
+        <p>
+          Preencha todas as notas da rubrica. O cálculo utiliza os pesos
+          definidos na abertura da banca.
+        </p>
+        {!assigned.length ? (
+          <Empty>Nenhuma banca atribuída a você</Empty>
+        ) : (
+          <>
+            <InputField label="Banca para avaliar">
+              <select
+                value={eventId}
+                onChange={(e) => {
+                  setEventId(e.target.value);
+                  setProjectId("");
+                  setScores({});
+                  setNotes("");
+                  setReceipt("");
+                }}
+              >
+                <option value="">Selecione</option>
+                {assigned.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.name} ·{" "}
+                    {e.status === "open"
+                      ? "Aberta"
+                      : e.status === "draft"
+                        ? "Em preparação"
+                        : "Encerrada"}
+                  </option>
+                ))}
+              </select>
+            </InputField>
+            {event && (
+              <InputField label="Projeto para avaliar">
+                <select
+                  value={projectId}
+                  onChange={(e) => chooseProject(e.target.value)}
+                >
+                  <option value="">Selecione</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                      {data.evaluations.some(
+                        (e) =>
+                          e.event_id === eventId &&
+                          e.project_id === p.id &&
+                          e.evaluator_id === userId,
+                      )
+                        ? " · Avaliado"
+                        : ""}
+                    </option>
+                  ))}
+                </select>
+              </InputField>
+            )}
+            {event &&
+              projectId &&
+              (event.status === "open" ? (
+                <form className="workspace-form" onSubmit={submit}>
+                  <p>{projects.find((p) => p.id === projectId)?.summary}</p>
+                  {event.criteria_snapshot.map((c) => (
+                    <fieldset key={c.id}>
+                      <legend>
+                        {c.name} · peso {c.weight}
+                      </legend>
+                      <InputField label={`Nota para ${c.name}`}>
+                        <select
+                          required
+                          value={scores[c.id] ?? ""}
+                          onChange={(e) =>
+                            setScores({
+                              ...scores,
+                              [c.id]: Number(e.target.value),
+                            })
+                          }
+                        >
+                          <option value="">Escolha uma nota</option>
+                          {c.descriptors.map((d, i) => (
+                            <option key={i} value={i + 1}>
+                              {i + 1} — {d}
+                            </option>
+                          ))}
+                        </select>
+                      </InputField>
+                    </fieldset>
+                  ))}
+                  <InputField label="Observações da avaliação">
+                    <textarea
+                      maxLength={5000}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                    />
+                  </InputField>
+                  <SaveButton busy={busy}>Enviar avaliação</SaveButton>
+                  {receipt && <p role="status">{receipt}</p>}
+                </form>
+              ) : (
+                <p>A banca precisa estar aberta para receber avaliações.</p>
+              ))}
+          </>
+        )}
+      </Card>
+      <Card>
+        <h2 className="section-title">Comprovantes e histórico</h2>
+        {data.evaluations
+          .filter((e) => e.evaluator_id === userId)
+          .map((e) => (
+            <article className="workspace-row" key={e.id}>
+              <div>
+                <strong>
+                  {data.projects.find((p) => p.id === e.project_id)?.name ??
+                    "Projeto"}
+                </strong>
+                <div>
+                  {data.events.find((ev) => ev.id === e.event_id)?.name}
+                </div>
+                <div>
+                  Média: {score(e.average)} · {dateTime(e.submitted_at)}
+                </div>
+                <small>Comprovante: {e.id}</small>
+              </div>
+            </article>
+          ))}
+        {!data.evaluations.some((e) => e.evaluator_id === userId) && (
+          <Empty>Nenhuma avaliação enviada</Empty>
+        )}
+      </Card>
+    </>
+  );
+}

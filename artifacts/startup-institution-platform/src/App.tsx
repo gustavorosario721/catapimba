@@ -14,6 +14,7 @@ import { Btn, Card, Field, PageHead, SearchBox, Stat, Status } from './component
 import { AssessmentPage } from './pages/assessment-page';
 import { PodiumPage, ResultsPage } from './pages/analysis-pages';
 import { AuthPage, PublicHome } from './pages/public-pages';
+import { IdentityPage } from './pages/identity-page';
 import { AuthenticatedLayout } from './layouts/authenticated-layout';
 
 const roleInfo: Record<Role,{name:string;caption:string}> = {
@@ -114,7 +115,9 @@ function App() {
   const [assessments,setAssessments]=useState<DemoAssessment[]>([]);
   if(path==='/')return <PublicHome/>;
   if(path==='/permissoes')return <Redirect to="/projetos"/>;
-  if(path==='/login')return <AuthPage kind="login"/>;
+  if(path==='/login')return <IdentityPage mode="login"/>;
+  if(path==='/auth/callback')return <IdentityPage mode="callback"/>;
+  if(path==='/conta'||path.startsWith('/app/'))return <IdentityPage mode="account"/>;
   if(path==='/solicitar-acesso')return <AuthPage kind="request"/>;
   if(path==='/recuperar-senha')return <AuthPage kind="recover"/>;
   return <Switch><Route path="*"><DemoApp path={path} membershipId={membershipId} setMembershipId={setMembershipId} memberships={memberships} setMemberships={setMemberships} institutionRecords={institutionRecords} setInstitutionRecords={setInstitutionRecords} users={users} setUsers={setUsers} assessments={assessments} setAssessments={setAssessments}/></Route></Switch>;

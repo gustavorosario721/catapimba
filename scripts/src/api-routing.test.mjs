@@ -38,3 +38,14 @@ for (const [method, path] of [
     assert.deepEqual(await response.json(), { error: 'Endpoint não encontrado' });
   });
 }
+
+for (const authorization of [undefined, 'Basic invalid', 'Bearer bad token']) {
+  test(`identity rejects missing or malformed authorization: ${authorization ?? 'missing'}`, async () => {
+    const response = await fetch(`${origin}/api/auth/me`, {
+      headers: authorization ? { Authorization: authorization } : {},
+    });
+    assert.equal(response.status, 401);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal('memberships' in await response.json(), false);
+  });
+}
