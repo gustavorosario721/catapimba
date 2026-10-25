@@ -119,3 +119,20 @@ a branch padrão via API retornou HTTP 403 (`Resource not accessible by integrat
 Esse ajuste permanece pendente no painel Settings → General → Default branch.
 A branch padrão observada após a tentativa ainda é `replit-agent`. Não houve deploy
 da `main`, conforme a consulta de implantações da Vercel.
+
+## Implantação autorizada em produção
+
+Em 25/10/2026, após pedido explícito de deploy da `main`, o commit `89430e0` foi
+implantado como produção no projeto Vercel existente. Deployment:
+`dpl_E9hjRHYkhVTrXL6q55d6EQ8yry2P`, estado confirmado READY, URL pública
+https://catapimba-mu.vercel.app. As quatro variáveis publicáveis/URL do Supabase
+foram configuradas para o ambiente production. Nenhuma chave administrativa foi usada.
+
+O script `check-deployment.ts` passou contra a URL pública, incluindo health check,
+rotas da SPA, erros JSON da API, bundle e asset ausente. As negações sem token no
+catálogo e com token inválido na identidade foram verificadas remotamente.
+
+A conexão Supabase disponível não permite consultar/alterar URL Configuration do Auth.
+O retorno Google precisa incluir `https://catapimba-mu.vercel.app/auth/callback` na
+allowlist. Login Google completo em produção ainda depende de homologação pelo usuário.
+O deploy automático da main continua desativado; esta publicação foi manual e autorizada.

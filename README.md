@@ -56,4 +56,4 @@ Orçamento: R$ 0 durante desenvolvimento e demonstração. Nenhum plano pago foi
 
 O refinamento visual usa componentes compartilhados, tipografia de sistema e uma paleta única. Solicitação de acesso é feita somente na conta autenticada; recuperação de acesso é tratada pelo Google, sem senha própria ou envio de e-mail simulado.
 
-O [relatório de refinamento](docs/refinement-validation.md) registra o que mudou, testes locais e limites. O código foi consolidado na `main`; a publicação na Vercel continua dependendo de autorização. A mudança de branch padrão não substitui automaticamente a versão já implantada.
+O [relatório de refinamento](docs/refinement-validation.md) registra o que mudou, testes locais e limites. O código foi consolidado na `main`; a publicação manual desta versão foi autorizada. A versão do commit `89430e0` foi implantada manualmente em produção em 25/10/2026: https://catapimba-mu.vercel.app. Novos deploys continuam sujeitos à autorização.
