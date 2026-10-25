@@ -61,7 +61,9 @@ O build da API gera `artifacts/api-server/dist/index.mjs` (ESM).
 ## Arquitetura aprovada
 
 Preservar Vite + Express e implantar ambos em um único projeto Vercel. A configuração está em `vercel.json` e a entrada da função está em `api/index.mjs`.
-O preview remoto ainda precisa ser publicado e verificado. Não há deploy validado.
+O preview está conectado à branch `chore/vercel-integration`; cada push gera um novo build.
+A implantação foi verificada por HTTP em 25/10/2026. Isso não representa testes
+visuais de navegador, autenticação ou persistência.
 
 Usar Supabase PostgreSQL e Auth. O fluxo inicial recomendado é Google OAuth para
 evitar depender de SMTP para confirmação e recuperação de senha. Será necessário
