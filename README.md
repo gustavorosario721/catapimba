@@ -13,8 +13,8 @@ pnpm run typecheck
 pnpm run build
 ```
 
-O lockfile oficial é `pnpm-lock.yaml`. O `package-lock.json` herdado não é usado;
-não execute `npm install`. A instalação não deve apagar arquivos versionados.
+O lockfile oficial é `pnpm-lock.yaml`; não execute `npm install`.
+A instalação não deve apagar arquivos versionados.
 A política de idade mínima de dependências permanece habilitada.
 
 ## Execução local
@@ -60,8 +60,8 @@ O build da API gera `artifacts/api-server/dist/index.mjs` (ESM).
 
 ## Arquitetura aprovada
 
-Preservar Vite + Express e implantar ambos em um único projeto Vercel. A integração
-e o preview ainda precisam ser implementados e verificados. Não há deploy validado.
+Preservar Vite + Express e implantar ambos em um único projeto Vercel. A configuração está em `vercel.json` e a entrada da função está em `api/index.ts`.
+O preview remoto ainda precisa ser publicado e verificado. Não há deploy validado.
 
 Usar Supabase PostgreSQL e Auth. O fluxo inicial recomendado é Google OAuth para
 evitar depender de SMTP para confirmação e recuperação de senha. Será necessário
@@ -88,10 +88,36 @@ inatividade. Verificar condições atuais antes de habilitar recursos pagos.
 ## Verificação e próxima etapa
 
 `pnpm run build` verifica tipos e compila as aplicações, inclusive o sandbox.
-Ainda não existe suíte automatizada de testes de negócio ou navegador. Build e
-typecheck não comprovam segurança, conexão de banco ou deploy.
+Os testes de roteamento da API estão em `api/routing.test.ts` (`pnpm test:routing`).
+Ainda não existem testes de negócio ou navegador. Build e typecheck não comprovam
+segurança, conexão de banco ou deploy.
 
-Próxima etapa: adaptar a entrada Express e configurar o roteamento SPA/API na
-Vercel, selecionando os pacotes necessários ao build. Verificar em preview URLs
-diretas, assets, health check e respostas para endpoints inexistentes. Depois,
-implementar identidade e isolamento com testes negativos entre duas instituições.
+## Vercel: frontend e API no mesmo projeto
+
+Importe este repositório com **Root Directory na raiz**, nunca na pasta do frontend.
+Use Node.js 24 e o preset Vite. `vercel.json` define instalação com lockfile,
+`pnpm run build:vercel` e o diretório de saída. Esse build verifica bibliotecas,
+API e frontend principal; não compila o sandbox auxiliar.
+
+`api/index.ts` exporta o Express sem iniciar listener. A Vercel compila essa função
+separadamente do bundle local. `/api/*` vai para a função; os demais caminhos da
+interface recebem `index.html`, preservando arquivos estáticos. `/assets/*` não
+recebe o fallback da SPA, para que assets inexistentes retornem 404.
+
+Não configure `DATABASE_URL` ou credenciais Supabase para esta primeira validação.
+O health check não acessa o banco. Não existe outro servidor de aplicação no Render.
+
+Após publicar um preview, execute:
+
+```bash
+pnpm check:deployment https://URL-DO-PREVIEW
+```
+
+Esse comando verifica health check, query string, API inexistente (404 JSON),
+método incorreto, URLs diretas da interface, bundle JavaScript e asset inexistente.
+O preview precisa estar acessível ao executor; uma tela de proteção de deploy não
+é resultado válido da aplicação. Não desabilite proteções de produção para o teste.
+
+O build local e os testes Express não validam o roteamento da infraestrutura Vercel.
+Somente registre a implantação como concluída após executar as verificações contra
+a URL remota. Em seguida, implementar identidade e isolamento institucional.
