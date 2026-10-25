@@ -54,3 +54,7 @@ Thumbs.db
 .cache/
 .local/
 .env
+
+# Local credentials (keep sanitized examples versionable)
+.env.*
+!.env.example
