@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import type { Command, Event, WorkspaceData } from "./types";
+import { ConfirmDialog } from "../components/app-ui";
 import { eventStatuses } from "./types";
 import { Card, Empty, InputField, SaveButton, dateTime } from "./ui";
 
@@ -12,6 +13,8 @@ export function EventsModule({
   command: Command;
   busy: boolean;
 }) {
+  const [cancelTarget, setCancelTarget] = useState<Event | null>(null);
+  const [dateError, setDateError] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [name, setName] = useState("");
@@ -22,6 +25,7 @@ export function EventsModule({
   const selected = data.events.find((e) => e.id === selectedId);
   function edit(ev?: Event) {
     setEditing(ev?.id ?? "new");
+    setDateError("");
     setName(ev?.name ?? "");
     setDate(
       ev
@@ -50,11 +54,17 @@ export function EventsModule({
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
+    const scheduled = new Date(date);
+    if (!Number.isFinite(scheduled.getTime())) {
+      setDateError("Informe uma data e um horário válidos.");
+      return;
+    }
+    setDateError("");
     if (
       await command("event.save", {
         ...(editing !== "new" ? { id: editing } : {}),
         name,
-        scheduled_at: new Date(date).toISOString(),
+        scheduled_at: scheduled.toISOString(),
         project_ids: projectIds,
         evaluator_ids: evaluators,
       })
@@ -64,6 +74,7 @@ export function EventsModule({
   }
   const toggle = (items: string[], id: string) =>
     items.includes(id) ? items.filter((x) => x !== id) : [...items, id];
+  const filtered = data.events.filter((e) => !filter || e.status === filter);
   const who = (id: string) =>
     data.people.find((p) => p.id === id)?.name ?? "Avaliador";
   return (
@@ -87,29 +98,31 @@ export function EventsModule({
             ))}
           </select>
         </InputField>
-        {data.events
-          .filter((e) => !filter || e.status === filter)
-          .map((ev) => (
-            <div className="workspace-row" key={ev.id}>
+        {filtered.map((ev) => (
+          <div className="workspace-row" key={ev.id}>
+            <div>
+              <button
+                className="row-link"
+                onClick={() => {
+                  setSelectedId(ev.id);
+                  setEditing(null);
+                }}
+              >
+                {ev.name}
+              </button>
               <div>
-                <button
-                  className="row-link"
-                  onClick={() => {
-                    setSelectedId(ev.id);
-                    setEditing(null);
-                  }}
-                >
-                  {ev.name}
-                </button>
-                <div>
-                  {dateTime(ev.scheduled_at)} · {eventStatuses[ev.status]}
-                  {ev.results_published ? " · Resultados publicados" : ""}
-                </div>
+                {dateTime(ev.scheduled_at)} · {eventStatuses[ev.status]}
+                {ev.results_published ? " · Resultados publicados" : ""}
               </div>
             </div>
-          ))}
-        {!data.events.length && (
-          <Empty>Nenhuma banca disponível no seu contexto</Empty>
+          </div>
+        ))}
+        {!filtered.length && (
+          <Empty>
+            {data.events.length
+              ? "Nenhuma banca corresponde ao filtro"
+              : "Nenhuma banca disponível no seu contexto"}
+          </Empty>
         )}
       </Card>
       {editing !== null && (
@@ -134,8 +147,16 @@ export function EventsModule({
                 onChange={(e) => setDate(e.target.value)}
               />
             </InputField>
+            {dateError && (
+              <p role="alert" className="notice error">
+                {dateError}
+              </p>
+            )}
             <fieldset>
               <legend>Projetos da banca</legend>
+              {!data.projects.some((p) => !p.archived) && (
+                <p>Cadastre projetos ativos antes de abrir a banca.</p>
+              )}
               {data.projects
                 .filter((p) => !p.archived)
                 .map((p) => (
@@ -151,6 +172,11 @@ export function EventsModule({
             </fieldset>
             <fieldset>
               <legend>Avaliadores com vínculo ativo</legend>
+              {!data.memberships.some(
+                (m) => m.status === "active" && m.roles.includes("evaluator"),
+              ) && (
+                <p>Peça à gestão para vincular avaliadores à instituição.</p>
+              )}
               {data.memberships
                 .filter(
                   (m) => m.status === "active" && m.roles.includes("evaluator"),
@@ -188,7 +214,11 @@ export function EventsModule({
         <Card>
           <div className="section-head">
             <h2 className="section-title">{selected.name}</h2>
-            <span className="status">{eventStatuses[selected.status]}</span>
+            <span
+              className={`status ${selected.status === "cancelled" ? "paused" : selected.status === "draft" ? "pending" : selected.status === "closed" ? "neutral" : ""}`}
+            >
+              {eventStatuses[selected.status]}
+            </span>
           </div>
           <p>{dateTime(selected.scheduled_at)}</p>
           <h3>Projetos</h3>
@@ -273,17 +303,7 @@ export function EventsModule({
                 <button
                   className="btn btn-danger"
                   disabled={busy}
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Cancelar esta banca? As avaliações serão preservadas, mas a banca não poderá ser reaberta.",
-                      )
-                    )
-                      void command("event.status", {
-                        id: selected.id,
-                        status: "cancelled",
-                      });
-                  }}
+                  onClick={() => setCancelTarget(selected)}
                 >
                   Cancelar banca
                 </button>
@@ -292,6 +312,26 @@ export function EventsModule({
           )}
         </Card>
       )}
+      <ConfirmDialog
+        open={cancelTarget !== null}
+        title="Cancelar banca?"
+        confirmLabel="Cancelar banca"
+        onClose={() => setCancelTarget(null)}
+        onConfirm={() => {
+          if (cancelTarget) {
+            void command("event.status", {
+              id: cancelTarget.id,
+              status: "cancelled",
+            });
+            setCancelTarget(null);
+          }
+        }}
+      >
+        <p>
+          As avaliações de {cancelTarget?.name} serão preservadas. A banca não
+          poderá ser reaberta nem gerar premiação.
+        </p>
+      </ConfirmDialog>
     </>
   );
 }

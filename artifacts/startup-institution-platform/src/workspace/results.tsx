@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Result, WorkspaceData } from "./types";
+import type { WorkspaceData } from "./types";
 import { Card, Empty, InputField, score } from "./ui";
 
 export function ResultsModule({
@@ -17,24 +17,27 @@ export function ResultsModule({
   const [query, setQuery] = useState("");
   const [confetti, setConfetti] = useState(true);
   const [sound, setSound] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
   const audio = useRef<AudioContext | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const result =
     data.results.find((r) => r.event_id === eventId) ?? data.results[0];
-  useEffect(
-    () => () => {
-      if (timer.current) clearInterval(timer.current);
-      void audio.current?.close();
-    },
-    [],
-  );
+  function stopAudio() {
+    if (timer.current) clearInterval(timer.current);
+    timer.current = null;
+    const context = audio.current;
+    audio.current = null;
+    if (context && context.state !== "closed")
+      void context.close().catch(() => {});
+  }
+  useEffect(() => {
+    setSound(false);
+    return stopAudio;
+  }, [result?.event_id, mode]);
   async function toggleSound() {
     if (sound) {
-      if (timer.current) clearInterval(timer.current);
-      timer.current = null;
-      await audio.current?.close();
-      audio.current = null;
+      stopAudio();
       setSound(false);
       return;
     }
@@ -60,10 +63,14 @@ export function ResultsModule({
       timer.current = setInterval(play, 1800);
       setSound(true);
     } catch {
+      stopAudio();
+      setSound(false);
       setError("Não foi possível reproduzir o som neste dispositivo.");
     }
   }
   async function download(type: "projects" | "results") {
+    if (downloading) return;
+    setDownloading(true);
     setError("");
     try {
       const response = await fetch(
@@ -76,11 +83,13 @@ export function ResultsModule({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `elo-${type}.csv`;
+      link.download = `catapimba-${type}.csv`;
       link.click();
-      URL.revokeObjectURL(url);
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Falha ao exportar.");
+    } finally {
+      setDownloading(false);
     }
   }
   const rows =
@@ -103,11 +112,17 @@ export function ResultsModule({
           compartilham a mesma posição; a exibição usa duas casas. Resultados
           parciais ficam restritos à gestão.
         </p>
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p role="alert" className="notice error">
+            {error}
+          </p>
+        )}
+        {downloading && <p role="status">Preparando arquivo…</p>}
         {mode === "reports" && (
           <div className="workspace-actions">
             <button
               className="btn btn-primary"
+              disabled={downloading}
               onClick={() => download("projects")}
             >
               Exportar portfólio autorizado (CSV)
@@ -115,6 +130,7 @@ export function ResultsModule({
             {result && (
               <button
                 className="btn btn-ghost"
+                disabled={downloading}
                 onClick={() => download("results")}
               >
                 Exportar resultado desta banca (CSV)
@@ -157,11 +173,16 @@ export function ResultsModule({
                     <div className="workspace-actions">
                       <button
                         className="btn btn-ghost"
+                        aria-pressed={confetti}
                         onClick={() => setConfetti((v) => !v)}
                       >
                         {confetti ? "Desativar" : "Ativar"} confete
                       </button>
-                      <button className="btn btn-ghost" onClick={toggleSound}>
+                      <button
+                        className="btn btn-ghost"
+                        aria-pressed={sound}
+                        onClick={toggleSound}
+                      >
                         {sound ? "Desligar som" : "Ligar som"}
                       </button>
                     </div>
@@ -208,7 +229,12 @@ export function ResultsModule({
                 placeholder="Nome do projeto"
               />
             </InputField>
-            <div className="table-wrap">
+            <div
+              className="table-wrap"
+              tabIndex={0}
+              role="region"
+              aria-label="Classificação dos projetos"
+            >
               <table>
                 <thead>
                   <tr>
@@ -232,6 +258,13 @@ export function ResultsModule({
                 </tbody>
               </table>
             </div>
+            {!rows.length && (
+              <Empty>
+                {result?.rows.length
+                  ? "Nenhum projeto corresponde à pesquisa"
+                  : "Nenhuma avaliação registrada nesta banca"}
+              </Empty>
+            )}
           </>
         )}
       </Card>

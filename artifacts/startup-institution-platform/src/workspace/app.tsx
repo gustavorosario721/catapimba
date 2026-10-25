@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Activity,
+  Menu,
+  X,
+  RefreshCw,
   Building2,
   UsersRound,
   Lightbulb,
@@ -16,6 +18,7 @@ import {
   LayoutDashboard,
   UserRound,
 } from "lucide-react";
+import { Logo, LoadingState } from "../components/app-ui";
 import { PlatformPanel } from "../pages/platform-panel";
 import { AccessRequest, MembersModule } from "./access";
 import { ProjectsModule } from "./projects";
@@ -38,13 +41,24 @@ export function WorkspaceApp({
   token,
   onSignOut,
   refreshIdentity,
+  authError,
+  signingOut,
 }: {
   identity: Identity;
   token: string;
   onSignOut: () => Promise<void>;
   refreshIdentity: () => void;
+  authError: string;
+  signingOut: boolean;
 }) {
-  const [path, navigate] = useLocation();
+  const [path] = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [path]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState("");
   const [catalog, setCatalog] = useState<Institution[]>([]);
   const [institutionId, setInstitutionId] = useState("");
   const [scope, setScope] = useState<WorkspaceData | null>(null);
@@ -81,24 +95,33 @@ export function WorkspaceApp({
       },
       cache: "no-store",
     });
-    const body = await response.json();
+    const body = await response.json().catch(() => {
+      throw new Error(
+        "O serviço não respondeu como esperado. Tente novamente.",
+      );
+    });
     if (!response.ok)
       throw new Error(body.error ?? "Não foi possível carregar este contexto.");
     return body;
   }
   useEffect(() => {
     const controller = new AbortController();
+    setCatalogLoading(true);
+    setCatalogError("");
     void api("/workspace/catalog", { signal: controller.signal })
       .then((body) => {
         if (!controller.signal.aborted) setCatalog(body.institutions);
       })
       .catch((reason) => {
         if (!controller.signal.aborted)
-          setError(
+          setCatalogError(
             reason instanceof Error
               ? reason.message
               : "Não foi possível carregar as instituições.",
           );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCatalogLoading(false);
       });
     return () => controller.abort();
   }, [token, attempt]);
@@ -169,6 +192,8 @@ export function WorkspaceApp({
     }
   };
   async function requestAccess(id: string, role: Role) {
+    if (inFlight.current) return false;
+    inFlight.current = true;
     setBusy(true);
     setError("");
     try {
@@ -185,6 +210,7 @@ export function WorkspaceApp({
       );
       return false;
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   }
@@ -242,52 +268,84 @@ export function WorkspaceApp({
   const current = nav.find((n) => n.id === module && n.show);
   const pending =
     data?.memberships.filter((m) => m.status === "pending").length ?? 0;
+  const navigation = (
+    <nav className="nav-list" aria-label="Navegação principal">
+      {nav
+        .filter((n) => n.show)
+        .map((n) => (
+          <Link
+            key={n.id}
+            aria-current={module === n.id ? "page" : undefined}
+            href={`/app/${n.id}`}
+            onClick={() => {
+              if (menuOpen) menuButton.current?.focus();
+              setMenuOpen(false);
+            }}
+            className={`nav-link ${module === n.id ? "active" : ""}`}
+          >
+            <n.icon />
+            <span>{n.name}</span>
+          </Link>
+        ))}
+    </nav>
+  );
+  const roleLabel = identity.isPlatformAdministrator
+    ? "Superadministrador"
+    : ownRoles || "Aguardando vínculo";
   return (
     <div className="app-shell workspace-shell">
       <aside className="sidebar">
         <Link className="brand" href="/conta">
-          <span className="brand-mark">
-            <Activity />
-          </span>
-          elo.
+          <Logo />
         </Link>
         <div className="workspace-label">
           {identity.isPlatformAdministrator
             ? "Administração da plataforma"
             : (institution?.name ?? "Minha conta")}
         </div>
-        <nav className="nav-list" aria-label="Navegação principal">
-          {nav
-            .filter((n) => n.show)
-            .map((n) => (
-              <Link
-                key={n.id}
-                href={`/app/${n.id}`}
-                className={`nav-link ${module === n.id ? "active" : ""}`}
-              >
-                <n.icon />
-                <span>{n.name}</span>
-              </Link>
-            ))}
-        </nav>
+        {navigation}
         <div className="sidebar-bottom">
-          <p className="demo-note">
-            {identity.isPlatformAdministrator
-              ? "Superadministrador"
-              : (ownRoles ?? "Aguardando vínculo")}
-          </p>
-          <button className="nav-link" onClick={onSignOut}>
+          <p className="account-role">{roleLabel}</p>
+          <button
+            className="nav-link"
+            onClick={onSignOut}
+            disabled={signingOut}
+          >
             <LogOut />
-            Sair da conta
+            {signingOut ? "Saindo…" : "Sair da conta"}
           </button>
         </div>
       </aside>
       <div className="main-area">
         <header className="topbar">
+          <button
+            ref={menuButton}
+            className="btn btn-ghost btn-icon mobile-menu"
+            aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={menuOpen}
+            aria-controls={menuOpen ? "mobile-navigation" : undefined}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setMenuOpen(false);
+                menuButton.current?.focus();
+              }
+            }}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            {menuOpen ? <X /> : <Menu />}
+          </button>
           <div className="crumb">
-            Elo / {current?.name ?? "Área institucional"}
+            Catapimba / {current?.name ?? "Área institucional"}
           </div>
-          <div className="top-actions">
+          <div
+            className="top-actions"
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && menuOpen) {
+                setMenuOpen(false);
+                menuButton.current?.focus();
+              }
+            }}
+          >
             <label className="sr-only" htmlFor="workspace-institution">
               Instituição atual
             </label>
@@ -310,17 +368,20 @@ export function WorkspaceApp({
               ))}
             </select>
             <button
-              className="btn btn-ghost"
+              className="btn btn-ghost btn-refresh"
+              aria-label="Atualizar dados"
               onClick={() => {
                 setAttempt((v) => v + 1);
                 refreshIdentity();
               }}
               disabled={busy}
             >
-              Atualizar
+              <RefreshCw size={17} />
+              <span>Atualizar</span>
             </button>
             <button
-              className="btn btn-ghost"
+              className="btn btn-ghost btn-icon"
+              disabled={signingOut}
               onClick={onSignOut}
               aria-label="Sair da conta"
             >
@@ -328,7 +389,30 @@ export function WorkspaceApp({
             </button>
           </div>
         </header>
-        <main className="content workspace-content">
+        {menuOpen && (
+          <div
+            id="mobile-navigation"
+            className="mobile-nav-panel"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setMenuOpen(false);
+                menuButton.current?.focus();
+              }
+            }}
+          >
+            {navigation}
+            <p className="account-role">{roleLabel}</p>
+            <button
+              className="nav-link"
+              disabled={signingOut}
+              onClick={onSignOut}
+            >
+              <LogOut />
+              {signingOut ? "Saindo…" : "Sair da conta"}
+            </button>
+          </div>
+        )}
+        <main id="main-content" className="content workspace-content">
           <PageHead
             eyebrow={
               identity.isPlatformAdministrator
@@ -338,8 +422,25 @@ export function WorkspaceApp({
             title={current?.name ?? "Área institucional"}
             description={institution?.name ?? identity.user.email ?? ""}
           />
+          {authError && (
+            <div role="alert" className="notice error">
+              {authError}
+            </div>
+          )}
+          {catalogError && (
+            <div role="alert" className="notice error">
+              {catalogError}{" "}
+              <button
+                className="btn btn-ghost"
+                disabled={busy}
+                onClick={() => setAttempt((v) => v + 1)}
+              >
+                Recarregar instituições
+              </button>
+            </div>
+          )}
           {error && (
-            <div role="alert" className="notice warn">
+            <div role="alert" className="notice error">
               {error}
             </div>
           )}
@@ -354,16 +455,56 @@ export function WorkspaceApp({
               onChange={() => setAttempt((v) => v + 1)}
             />
           ) : module === "access" ? (
-            <AccessRequest
-              institutions={catalog}
-              identity={identity}
-              request={requestAccess}
-              busy={busy}
-              refresh={refreshIdentity}
-            />
+            catalogLoading ? (
+              <Card>
+                <LoadingState>Carregando instituições…</LoadingState>
+              </Card>
+            ) : catalogError ? (
+              <Card>
+                <Empty>
+                  Não foi possível carregar as instituições para solicitar
+                  acesso
+                </Empty>
+              </Card>
+            ) : (
+              <AccessRequest
+                institutions={catalog}
+                identity={identity}
+                request={requestAccess}
+                busy={busy}
+                refresh={refreshIdentity}
+              />
+            )
           ) : loading ? (
             <Card>
-              <p role="status">Carregando seu contexto institucional…</p>
+              <LoadingState>
+                Carregando seu contexto institucional…
+              </LoadingState>
+            </Card>
+          ) : !data &&
+            (catalogLoading ||
+              (institutionId && institution?.status === "active" && !error)) ? (
+            <Card>
+              <LoadingState>
+                Carregando seu contexto institucional…
+              </LoadingState>
+            </Card>
+          ) : !data && error ? (
+            <Card>
+              <Empty>Não foi possível abrir este contexto</Empty>
+              <p>
+                Seu vínculo pode ter mudado ou o serviço pode estar
+                indisponível. Atualize os dados para tentar novamente.
+              </p>
+              <button
+                className="btn btn-ghost"
+                onClick={() => {
+                  setAttempt((v) => v + 1);
+                  refreshIdentity();
+                }}
+              >
+                Atualizar meu acesso
+              </button>
             </Card>
           ) : !data ? (
             <Card>
@@ -452,8 +593,8 @@ export function WorkspaceApp({
                       : ownRoles}
                   </p>
                   <p>
-                    Dados persistidos da instituição selecionada. Alterar o
-                    contexto atualiza os recursos e as permissões disponíveis.
+                    Você está em {data.institution.name}. Use o seletor no topo
+                    para alternar entre suas instituições.
                   </p>
                   <Link href="/app/access">Consultar meus vínculos</Link>
                 </Card>
@@ -461,6 +602,8 @@ export function WorkspaceApp({
             </>
           ) : module === "members" ? (
             <MembersModule
+              key={institutionId}
+              userId={identity.user.id}
               data={data}
               command={command}
               busy={busy}
@@ -515,7 +658,12 @@ export function WorkspaceApp({
               <h2 className="section-title">
                 Últimas operações da instituição
               </h2>
-              <div className="table-wrap">
+              <div
+                className="table-wrap"
+                tabIndex={0}
+                role="region"
+                aria-label="Histórico de auditoria"
+              >
                 <table>
                   <thead>
                     <tr>

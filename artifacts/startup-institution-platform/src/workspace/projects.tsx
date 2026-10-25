@@ -49,6 +49,7 @@ export function ProjectsModule({
     );
   function edit(project?: Project) {
     setEditing(project?.id ?? "new");
+    setPersonId("");
     setForm(
       project
         ? {
@@ -77,6 +78,15 @@ export function ProjectsModule({
   }
   const eligible = data.memberships.filter(
     (m) => m.status === "active" && m.roles.includes(kind),
+  );
+  const filtered = data.projects.filter(
+    (p) =>
+      (showArchived || !p.archived) &&
+      (!stage || p.stage === stage) &&
+      (!year || p.year === Number(year)) &&
+      `${p.name} ${p.summary} ${p.category}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
   );
   const name = (id: string) =>
     data.people.find((p) => p.id === id)?.name ?? "Pessoa vinculada";
@@ -129,7 +139,12 @@ export function ProjectsModule({
             Incluir arquivados
           </label>
         </div>
-        <div className="table-wrap">
+        <div
+          className="table-wrap"
+          tabIndex={0}
+          role="region"
+          aria-label="Lista de projetos"
+        >
           <table>
             <thead>
               <tr>
@@ -140,48 +155,42 @@ export function ProjectsModule({
               </tr>
             </thead>
             <tbody>
-              {data.projects
-                .filter(
-                  (p) =>
-                    (showArchived || !p.archived) &&
-                    (!stage || p.stage === stage) &&
-                    (!year || p.year === Number(year)) &&
-                    `${p.name} ${p.summary} ${p.category}`
-                      .toLowerCase()
-                      .includes(search.toLowerCase()),
-                )
-                .map((p) => (
-                  <tr key={p.id}>
-                    <td>
-                      <button
-                        className="row-link"
-                        onClick={() => {
-                          setSelectedId(p.id);
-                          setEditing(null);
-                        }}
-                      >
-                        {p.name}
-                      </button>
-                      {p.archived && <span> · Arquivado</span>}
-                      <div className="section-sub">{p.category}</div>
-                    </td>
-                    <td>{p.stage}</td>
-                    <td>
-                      {p.year}.{p.semester}
-                    </td>
-                    <td>
-                      {data.participants
-                        .filter((x) => x.project_id === p.id)
-                        .map((x) => name(x.user_id))
-                        .join(", ") || "Sem integrantes"}
-                    </td>
-                  </tr>
-                ))}
+              {filtered.map((p) => (
+                <tr key={p.id}>
+                  <td>
+                    <button
+                      className="row-link"
+                      onClick={() => {
+                        setSelectedId(p.id);
+                        setEditing(null);
+                      }}
+                    >
+                      {p.name}
+                    </button>
+                    {p.archived && <span> · Arquivado</span>}
+                    <div className="section-sub">{p.category}</div>
+                  </td>
+                  <td>{p.stage}</td>
+                  <td>
+                    {p.year}.{p.semester}
+                  </td>
+                  <td>
+                    {data.participants
+                      .filter((x) => x.project_id === p.id)
+                      .map((x) => name(x.user_id))
+                      .join(", ") || "Sem integrantes"}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
-        {!data.projects.length && (
-          <Empty>Nenhum projeto disponível no seu contexto</Empty>
+        {!filtered.length && (
+          <Empty>
+            {data.projects.length
+              ? "Nenhum projeto corresponde aos filtros"
+              : "Nenhum projeto disponível no seu contexto"}
+          </Empty>
         )}
       </Card>
       {editing !== null && (

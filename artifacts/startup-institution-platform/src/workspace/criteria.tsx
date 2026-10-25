@@ -135,6 +135,9 @@ export function CriteriaModule({
                 onClick={() => {
                   setEditing("");
                   setName("");
+                  setWeight(1);
+                  setRubric(descriptors);
+                  setActive(true);
                 }}
               >
                 Cancelar edição

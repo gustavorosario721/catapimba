@@ -24,6 +24,13 @@ export function AccessRequest({
 }) {
   const [institution, setInstitution] = useState("");
   const [role, setRole] = useState<Role>("student");
+  const available = institutions.filter(
+    (i) =>
+      i.status === "active" &&
+      !identity.memberships.some(
+        (m) => m.institution_id === i.id && m.status !== "pending",
+      ),
+  );
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (institution && (await request(institution, role))) refresh();
@@ -46,45 +53,47 @@ export function AccessRequest({
           </span>
         </div>
       ))}
-      <form onSubmit={submit} className="workspace-form">
-        <InputField label="Instituição">
-          <select
-            required
-            value={institution}
-            onChange={(e) => setInstitution(e.target.value)}
-          >
-            <option value="">Selecione</option>
-            {institutions
-              .filter(
-                (i) =>
-                  i.status === "active" &&
-                  !identity.memberships.some(
-                    (m) => m.institution_id === i.id && m.status !== "pending",
-                  ),
-              )
-              .map((i) => (
+      {!identity.memberships.length && (
+        <p>Você ainda não possui vínculo com uma instituição.</p>
+      )}
+      {!available.length ? (
+        <p className="notice warn">
+          Não há instituições disponíveis para uma nova solicitação. Consulte
+          seus vínculos acima ou procure a gestão da instituição.
+        </p>
+      ) : (
+        <form onSubmit={submit} className="workspace-form">
+          <InputField label="Instituição">
+            <select
+              required
+              value={institution}
+              onChange={(e) => setInstitution(e.target.value)}
+            >
+              <option value="">Selecione</option>
+              {available.map((i) => (
                 <option key={i.id} value={i.id}>
                   {i.name}
                 </option>
               ))}
-          </select>
-        </InputField>
-        <InputField label="Perfil solicitado">
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as Role)}
-          >
-            {Object.entries(roleNames)
-              .filter(([r]) => r !== "institution_admin")
-              .map(([r, label]) => (
-                <option key={r} value={r}>
-                  {label}
-                </option>
-              ))}
-          </select>
-        </InputField>
-        <SaveButton busy={busy}>Solicitar acesso</SaveButton>
-      </form>
+            </select>
+          </InputField>
+          <InputField label="Perfil solicitado">
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as Role)}
+            >
+              {Object.entries(roleNames)
+                .filter(([r]) => r !== "institution_admin")
+                .map(([r, label]) => (
+                  <option key={r} value={r}>
+                    {label}
+                  </option>
+                ))}
+            </select>
+          </InputField>
+          <SaveButton busy={busy}>Solicitar acesso</SaveButton>
+        </form>
+      )}
     </Card>
   );
 }
@@ -94,17 +103,30 @@ export function MembersModule({
   command,
   busy,
   isPlatform,
+  userId,
 }: {
   data: WorkspaceData;
   command: Command;
   busy: boolean;
   isPlatform: boolean;
+  userId: string;
 }) {
   const [editing, setEditing] = useState("");
   const [email, setEmail] = useState("");
   const [roles, setRoles] = useState<Role[]>(["student"]);
   const [status, setStatus] = useState("active");
   const [search, setSearch] = useState("");
+  const filtered = data.memberships.filter((m) =>
+    `${data.people.find((p) => p.id === m.user_id)?.name ?? ""} ${data.people.find((p) => p.id === m.user_id)?.email ?? ""}`
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
+  function reset() {
+    setEditing("");
+    setEmail("");
+    setRoles(["student"]);
+    setStatus("active");
+  }
   const person = (id: string) => data.people.find((p) => p.id === id);
   function edit(id: string) {
     const m = data.memberships.find((m) => m.id === id);
@@ -142,7 +164,12 @@ export function MembersModule({
             />
           </InputField>
         </div>
-        <div className="table-wrap">
+        <div
+          className="table-wrap"
+          tabIndex={0}
+          role="region"
+          aria-label="Usuários e vínculos"
+        >
           <table>
             <thead>
               <tr>
@@ -153,41 +180,55 @@ export function MembersModule({
               </tr>
             </thead>
             <tbody>
-              {data.memberships
-                .filter((m) =>
-                  `${person(m.user_id)?.name} ${person(m.user_id)?.email}`
-                    .toLowerCase()
-                    .includes(search.toLowerCase()),
-                )
-                .map((m) => (
-                  <tr key={m.id}>
-                    <td>
-                      <strong>{person(m.user_id)?.name ?? "Usuário"}</strong>
-                      <div>{person(m.user_id)?.email}</div>
-                    </td>
-                    <td>{memberStatuses[m.status]}</td>
-                    <td>
-                      {m.roles.map((r) => roleNames[r]).join(", ") ||
-                        `Solicitado: ${roleNames[m.requested_role ?? "student"]}`}
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-ghost"
-                        disabled={busy}
-                        onClick={() => edit(m.id)}
-                      >
-                        {m.status === "pending"
-                          ? "Revisar acesso"
-                          : "Gerenciar"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+              {filtered.map((m) => (
+                <tr key={m.id}>
+                  <td>
+                    <strong>{person(m.user_id)?.name ?? "Usuário"}</strong>
+                    <div>{person(m.user_id)?.email}</div>
+                  </td>
+                  <td>{memberStatuses[m.status]}</td>
+                  <td>
+                    {m.roles.map((r) => roleNames[r]).join(", ") ||
+                      `Solicitado: ${roleNames[m.requested_role ?? "student"]}`}
+                  </td>
+                  <td>
+                    <button
+                      className="btn btn-ghost"
+                      disabled={
+                        busy ||
+                        (!isPlatform &&
+                          (m.user_id === userId ||
+                            m.roles.includes("institution_admin")))
+                      }
+                      title={
+                        !isPlatform &&
+                        (m.user_id === userId ||
+                          m.roles.includes("institution_admin"))
+                          ? "Este vínculo deve ser gerenciado por um superadministrador"
+                          : undefined
+                      }
+                      onClick={() => edit(m.id)}
+                    >
+                      {m.status === "pending" ? "Revisar acesso" : "Gerenciar"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
-        {!data.memberships.length && (
-          <Empty>Nenhum vínculo nesta instituição</Empty>
+        {!filtered.length && (
+          <Empty>
+            {data.memberships.length
+              ? "Nenhuma pessoa corresponde à pesquisa"
+              : "Nenhum vínculo nesta instituição"}
+          </Empty>
+        )}
+        {!isPlatform && (
+          <p className="section-sub">
+            Seu próprio vínculo e os administradores institucionais são
+            gerenciados pela administração da plataforma.
+          </p>
         )}
       </Card>
       <Card>
@@ -241,14 +282,7 @@ export function MembersModule({
             {editing ? "Salvar vínculo" : "Vincular pessoa"}
           </SaveButton>
           {editing && (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => {
-                setEditing("");
-                setEmail("");
-              }}
-            >
+            <button type="button" className="btn btn-ghost" onClick={reset}>
               Cancelar edição
             </button>
           )}

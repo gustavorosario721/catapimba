@@ -1,150 +1,75 @@
-# Base de identidade e isolamento institucional
+# Identidade e isolamento institucional
 
-Estado: fundação de banco e código implementada; provedor Google habilitado,
-entrada real confirmada pelo usuário e primeiro bootstrap administrativo auditado. Consulte [setup-supabase.md](setup-supabase.md) para
-as evidências e os limites desta entrega. O protótipo continua demonstrativo.
-
-## Escopo da primeira entrega
-
-Entrar e sair com Google via Supabase Auth; validar a identidade na API; consultar
-os vínculos da própria pessoa e tratar ausência de vínculo, aprovação pendente e
-suspensão. Um login bem-sucedido não concede acesso a instituições.
-
-Não implementar nesta entrega CRUD de projetos, bancas, critérios, notas ou
-resultados. O seletor de pessoas fictícias nunca será usado no ambiente autenticado.
-A demonstração poderá continuar separada e identificada, sem acesso a dados reais.
-
-## Pré-requisitos que devem ser verificados
-
-1. Acessar a conta Supabase e identificar projetos e plano existentes, inclusive
-   eventual banco originado no Bolt. Não presumir que esse banco esteja vazio.
-2. Confirmar o projeto de desenvolvimento e sua região. Não criar recursos pagos,
-   plano Pro ou branches de banco pagas para executar os testes.
-3. Inspecionar tabelas, políticas, usuários e configuração de Auth antes de propor
-   uma migration. Usar migrations versionadas; não usar `drizzle-kit push --force`.
-4. Configurar Google OAuth. As credenciais Google ficam no painel Supabase; não
-   pedir que o usuário cole Client Secret ou chaves administrativas na conversa.
-5. Configurar o callback do projeto Supabase no Google e as URLs de retorno exatas
-   da aplicação no Supabase, incluindo um endereço de preview estável autorizado.
-6. Verificar os nomes das variáveis de ambiente na Vercel antes de executar o fluxo
-   real. A instalação do plugin não comprova conexão de banco nem provedor OAuth.
+A fundação de identidade está implementada e é utilizada pela área `/conta` e pelos
+módulos `/app/*`. Consulte [workspace.md](workspace.md) para uso, papéis e limites e
+[setup-supabase.md](setup-supabase.md) para configuração e evidências de integração.
+As páginas e identidades fictícias foram removidas.
 
 ## Identidade e sessão
 
-Usar o identificador de `auth.users` como identidade global. Nome e e-mail não são
-identificadores de instituição, orientador, projeto ou papel administrativo.
+O identificador de `auth.users` é a identidade global. Google OAuth usa Authorization
+Code com PKCE pelo SDK oficial Supabase, com persistência e renovação de sessão já
+existentes. Não há senha própria, seleção artificial de perfis nem credenciais
+administrativas no navegador. Nome e e-mail servem para apresentação e vinculação;
+não são prova de papel ou instituição.
 
-O fluxo inicial proposto para a SPA é Authorization Code com PKCE pelo SDK oficial
-Supabase. Não implementar armazenamento próprio de senhas. Não solicitar tokens
-Google de acesso a Drive, Gmail ou outros serviços que o produto não utiliza.
+O cliente envia o JWT Supabase em `Authorization: Bearer`. Express usa Supabase Auth
+para validar a identidade e cria um cliente por requisição com o mesmo JWT e a chave
+publicável. Ausência ou invalidez de token retorna 401 sem conteúdo institucional;
+indisponibilidade pode retornar 503. As respostas protegidas usam `no-store`.
 
-O cliente envia o access token Supabase em `Authorization: Bearer` à API Express.
-O servidor verifica a identidade com Supabase Auth, sem confiar apenas no conteúdo
-decodificado do JWT. Token ausente, inválido ou expirado resulta em 401, sem dados.
-Não registrar access token, refresh token, código de callback ou cookies em logs.
-Usar respostas de identidade sem cache compartilhado (`Cache-Control: no-store`).
+A saída usa escopo `local`, preservando sessões de outros dispositivos. O SDK pode
+apagar a sessão local mesmo diante de falha remota; a interface informa essa condição.
+Não promete invalidar imediatamente access tokens já emitidos.
 
-## Modelo mínimo proposto
+## Vínculos e autorização
 
-| Entidade | Responsabilidade e restrições |
-| --- | --- |
-| Identidade Supabase | Uma pessoa global, sem papel institucional no cadastro público |
-| Instituição | ID imutável, nome e status ativa/suspensa |
-| Vínculo | Usuário, instituição, status pendente/ativo/suspenso e unicidade por par |
-| Papéis do vínculo | Papéis institucionais associados ao vínculo, sem duplicidade |
-| Administradores da plataforma | Concessão separada dos vínculos institucionais |
-| Auditoria | Ator, instituição quando aplicável, operação, recurso e horário |
+- A conta pode participar de várias instituições e acumular papéis em cada vínculo.
+- Autenticação por si só não concede acesso aos projetos. É preciso instituição e
+  vínculo ativos, além do papel e da associação ao recurso quando aplicável.
+- Solicitação pública de administração não existe. A solicitação autenticada de
+  perfil comum fica pendente e não concede papéis até a aprovação autorizada.
+- A suspensão bloqueia a operação seguinte, sem exigir novo login.
+- Somente a administração global concede administração institucional e administra
+  instituições. Administradores institucionais gerenciam os demais perfis de sua instituição.
+- Metadados editáveis do Google/Supabase nunca concedem privilégios.
+- A interface não oferece matriz de permissões editável; as capacidades são
+  declaradas no servidor e no banco. Esconder um botão não concede nem revoga acesso.
 
-As tabelas efetivas e suas migrations serão definidas depois da inspeção do projeto.
-O desenho permite diferentes papéis por instituição e mais de um papel no mesmo
-vínculo. Aprovação concede apenas os papéis explicitamente autorizados pelo gestor.
-Um papel solicitado pelo usuário não é uma concessão automática.
+## RLS e funções SQL
 
-## Política inicial de acesso
+A Data API recebe o JWT do próprio usuário, permitindo `auth.uid()` nas políticas.
+Os grants e RLS restringem SELECT direto. Escritas passam por RPCs, sem escrita
+livre nas tabelas. Wrappers públicos são SECURITY INVOKER; funções privilegiadas
+ficam em `private`, com `search_path=''`, EXECUTE restrito e autorização explícita.
+Como SECURITY DEFINER pode ultrapassar RLS, essas verificações são necessárias.
+As mutações e a auditoria são atômicas.
 
-- Sem sessão: nenhum recurso institucional, lista de vínculos ou dados de pessoas.
-- Autenticado sem vínculo: tela de acesso pendente/solicitação, sem dados internos.
-- Vínculo pendente ou suspenso: pode consultar o próprio estado, sem conteúdo
-  institucional ou poderes de gestão.
-- Instituição suspensa: bloquear acesso ao conteúdo institucional, mesmo com
-  vínculo anteriormente ativo. A própria situação pode continuar visível ao usuário.
-- Vínculo ativo em instituição ativa: acesso sujeito ao papel e à relação com o
-  recurso; conhecer um ID não concede acesso.
-- Gestor de A não aprova, promove ou altera vínculos de B.
-- Coordenador, orientador, avaliador e aluno não gerenciam papéis ou aprovações.
-- Somente a administração da plataforma concede administração institucional e
-  cria/ativa/suspende instituições, conforme os endpoints da etapa administrativa.
-- Ninguém concede a si mesmo privilégios por metadados OAuth, payload ou URL.
+Não usar `pg.Pool`, `DATABASE_URL` privilegiada ou service-role para operações de
+usuário e afirmar que RLS as protege automaticamente. As migrations SQL são o
+histórico oficial; não recriar o esquema com comandos Drizzle.
 
-A interface não terá matriz editável de permissões. As capacidades ficam explícitas
-no servidor e no banco, com testes. Os fluxos administrativos serão implementados
-na entrega seguinte; as restrições precisam existir desde a base.
+## Superadministrador inicial
 
-## RLS com identidade preservada
+`supabase/bootstrap-superadmin.sql` é um procedimento restrito por UUID exato,
+sem endpoint público. A concessão inicial já foi executada de forma controlada e
+auditada. Não promover a primeira pessoa que entrar nem usar domínio de e-mail
+como concessão administrativa. Não repetir bootstrap para resolver problemas visuais.
 
-Para operações do usuário, Express cria um cliente por requisição com a chave
-publicável e o JWT do próprio usuário e acessa a Data API Supabase. Assim o PostgREST
-estabelece a identidade da requisição e as políticas usam `auth.uid()`.
-Nunca reutilizar globalmente um cliente com token de outra pessoa.
+## Evidências e limites
 
-RLS e grants devem impedir acesso direto indevido pela Data API, inclusive quando
-alguém ignora a interface e faz requisições ao Supabase. Não basta proteger Express.
-Restringir colunas e operações sensíveis além do escopo de linhas: status, usuário,
-instituição e papéis não podem ser livremente alterados pelo titular do vínculo.
-Verificar políticas de leitura e de escrita e evitar recursão nas políticas sobre
-a própria tabela de vínculos. Funções privilegiadas, se necessárias, terão escopo
-mínimo, `search_path` fixo e permissão de execução explícita.
+Os testes SQL em `supabase/tests` validaram no PostgreSQL real, com rollback,
+isolamento, papéis, revogação e operações de negócio. Os testes HTTP usam upstream
+Supabase simulado. Os testes Playwright usam identidades e respostas simuladas
+restritas ao processo de teste. Essas evidências são diferentes e não substituem
+homologação com contas Google reais de cada perfil.
 
-O `pg.Pool` atual não transporta essa identidade. Não usar o pool privilegiado para
-operações de usuário e afirmar que RLS as protege. Drizzle pode apoiar o esquema e
-as ferramentas controladas sem se tornar o caminho de autorização em runtime.
+Nenhuma migration, tabela, política RLS ou regra de autorização foi alterada durante
+o refinamento visual e remoção da demonstração. Não foi feito reset do banco.
 
-Chaves secretas/service-role contornam RLS e não entram no frontend. Nenhum endpoint
-comum de usuário deve precisar delas. Não usar a chave administrativa para tornar
-um teste de autorização aparentemente bem-sucedido.
+## Operação
 
-## Primeiro superadministrador e auditoria
-
-Após criar a identidade real, um procedimento restrito concede o privilégio pelo
-UUID exato, registra a concessão e evita duplicação em reexecuções. Não promover a
-primeira pessoa que entrar, não usar domínio de e-mail como privilégio e não criar
-endpoint público de bootstrap. O procedimento não atribui poderes a usuários demo.
-
-Registrar aprovações, mudanças de papéis e suspensões no mesmo contexto transacional
-das alterações. Usuários comuns não podem inserir registros de auditoria em nome
-de outra pessoa, alterar ou excluir o histórico. Não incluir senhas ou tokens.
-
-## Critérios de conclusão e testes
-
-| Cenário | Resultado esperado |
-| --- | --- |
-| Google: entrar, retornar e sair | Sessão real; erro/cancelamento com mensagem recuperável |
-| Chamada API sem token, token forjado ou expirado | 401 sem dados de usuário ou instituição |
-| Pessoa sem vínculo | Nenhum acesso institucional e orientação para solicitar acesso |
-| Usuário de A troca IDs para B | Nenhum dado de B, inclusive via Data API direta |
-| Usuário tenta promover a si mesmo | Negado em Express e no banco |
-| Vínculo pendente/suspenso | Consulta do próprio estado, conteúdo institucional negado |
-| Instituição suspensa | Acesso interno negado apesar de vínculo ativo |
-| Pessoa ativa em A e B com papéis diferentes | Capacidades corretas em cada contexto |
-| Suspensão após login | Operação seguinte negada sem depender de novo login |
-| Duas requisições concorrentes de pessoas diferentes | Sem vazamento de identidade entre clientes |
-| Acesso anônimo ao banco | Sem leitura ou escrita de tabelas privadas |
-| Bootstrap controlado | Sem promoção pública; concessão exata, auditável e idempotente |
-
-Executar testes negativos com duas instituições e identidades reais de teste. Não
-usar mocks como única evidência de RLS. Verificar os mesmos acessos pela API Express
-e pela Data API com os tokens dos usuários. Não usar dados pessoais reais nas seeds.
-
-## Referências e orçamento
-
-- [Google no Supabase](https://supabase.com/docs/guides/auth/social-login/auth-google)
-- [URLs de retorno](https://supabase.com/docs/guides/auth/redirect-urls)
-- [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
-- [Chaves e seus privilégios](https://supabase.com/docs/guides/getting-started/api-keys)
-- [Planos e limites](https://supabase.com/pricing)
-
-O orçamento continua R$ 0 para desenvolvimento. Confirmar as cotas do plano ativo,
-pausa por inatividade e procedimentos de backup antes de tratar o ambiente como
-serviço estável. Minimizar dados pessoais e definir retenção, exclusão e acesso
-aos registros como parte dos requisitos de LGPD, sem prometer conformidade apenas
-pela escolha do provedor.
+O orçamento continua R$ 0 no desenvolvimento. Antes de uso institucional, definir
+retenção, exclusão, base legal e atendimento a titulares conforme a LGPD, além de
+homologar backup e recuperação. A existência de Auth e RLS não assegura conformidade
+jurídica nem disponibilidade operacional por si só.

@@ -1,6 +1,6 @@
 # Área institucional real
 
-A área autenticada está em `/conta` e `/app/*`. O protótipo demonstrativo continua separado nas rotas antigas, com dados fictícios. Nenhuma escolha de perfil na demonstração concede privilégios reais.
+A área autenticada está em `/conta` e `/app/*`. Os fluxos de demonstração foram removidos do código de produção. Endereços antigos como `/instituicao`, `/projetos` e `/bancas` encaminham para as áreas reais com autenticação. Caminhos desconhecidos mostram uma página em português, sem conteúdo de exemplo.
 
 ## Primeiro uso
 
@@ -13,7 +13,7 @@ A área autenticada está em `/conta` e `/app/*`. O protótipo demonstrativo con
 7. Encerre quando todas as combinações projeto × avaliador tiverem avaliação. Depois publique os resultados. Publicar e ocultar são ações distintas do encerramento.
 8. Consulte relatórios CSV, classificação, pódio com controles de animação e som, e auditoria.
 
-No celular, deslize horizontalmente a navegação inferior para acessar os demais módulos.
+No celular, use **Abrir menu** no cabeçalho para ver todos os módulos permitidos. O menu aceita teclado e Escape. Tabelas podem ser percorridas horizontalmente dentro da região identificada, também acessível pelo teclado.
 
 ## Permissões
 
@@ -50,12 +50,38 @@ O aviso de RLS sem política em `private.audit_events` é intencional: acesso di
 - `pnpm test:routing`: 17 testes HTTP, com Supabase simulado para validação de transporte, erros, identidade encaminhada, exportação e regressões de roteamento.
 - `supabase/tests/workspace.sql`: testes SQL no PostgreSQL real em transação com rollback. Cobrem aprovação, papéis institucionais, isolamento, SELECT direto com RLS, edição restrita de aluno, pesos congelados, notas inválidas, envio duplicado, encerramento, publicação, empates, suspensão e auditoria.
 - `supabase/tests/platform-institutions.sql`: administração global sem vínculo e concessão controlada/revogação.
-- `scripts/workspace-browser.py`: teste opcional com Python Playwright e Chromium instalado em `/usr/bin/chromium`, executado contra `vite preview` na porta 5173. Simula sessão e API, testa menus dos seis perfis, criação de projeto, envio de nota, páginas e largura mobile. Não substitui teste manual de login Google nem prova integração de todas as telas com o banco.
+- `scripts/workspace-browser.py`: testes opcionais com Python Playwright e Chromium em `/usr/bin/chromium`, contra `vite preview` na porta 5173. Fixtures e sessão simulada ficam exclusivamente nesse teste, sem conexão ao banco. Cobrem os seis perfis, rotas antigas, páginas públicas, carregamento/erros, saída da sessão, solicitação de acesso, filtros vazios, formulários, confirmação por teclado, resultados, exportação, navegação móvel e responsividade. Não substituem OAuth Google real nem a homologação dos fluxos com contas institucionais.
+
+Para executar o navegador:
+
+```bash
+pnpm --filter @workspace/startup-institution-platform run build
+pnpm --filter @workspace/startup-institution-platform exec vite preview --host 127.0.0.1 --port 5173
+# Em outro terminal, com Playwright Python e Chromium instalados:
+python3 scripts/workspace-browser.py
+```
+
+As variáveis opcionais `CATAPIMBA_TEST_ORIGIN`, `CATAPIMBA_CHROMIUM` e `CATAPIMBA_TEST_ARTIFACTS` substituem o endereço local, binário e pasta de capturas. Capturas contêm apenas fixtures, não contas reais.
+
+## Identidade e comportamento das ações
+
+`/solicitar-acesso` explica o procedimento e encaminha para **Meus acessos**; não envia dados. A solicitação verdadeira usa `access.request` na API e só aparece como pendente após a resposta real e a releitura da identidade. Um erro mantém o formulário e não confirma sucesso.
+
+`/recuperar-senha` informa que não existe senha Catapimba e oferece a recuperação do próprio Google. Não há formulário nem promessa de envio de e-mail. Login e callback mantêm PKCE e as URLs autorizadas existentes.
+
+A saída usa `supabase.auth.signOut({ scope: 'local' })`. Se o SDK limpar o navegador mas falhar na revogação remota, a interface explica essa condição em vez de afirmar sucesso completo ou exibir dados da conta. Como no próprio Supabase, um access token já emitido pode permanecer válido até expirar.
+
+O visual é compartilhado entre páginas públicas, autenticação e módulos, com fontes do sistema (sem requisição ao Google Fonts), contraste, foco visível, redimensionamento e respeito a movimento reduzido. Cancelar banca e suspender instituição exigem confirmação acessível, preservando os registros existentes.
+
 
 ## Limites para a próxima rodada
 
-Esta entrega é um núcleo funcional para demonstração e homologação. Ainda exige teste manual com contas reais de cada perfil antes de uso institucional. Não inclui anexos, notificações por e-mail, convites por SMTP, relatórios PDF, recuperação de banca encerrada, equipe reutilizável entre projetos ou integração acadêmica externa.
+Esta entrega é um núcleo funcional para homologação. Ainda exige teste manual com contas reais de cada perfil antes de uso institucional. Não inclui anexos, notificações por e-mail, convites por SMTP, relatórios PDF, recuperação de banca encerrada, equipe reutilizável entre projetos ou integração acadêmica externa.
 
 A leitura do contexto institucional retorna os recursos autorizados em um único JSON; antes de grandes volumes, implementar paginação e limites de exportação. Monitorar cotas dos planos gratuitos. Não foi contratado serviço pago. O preview autenticado está na branch `feat/identity-foundation`; produção depende de integração das branches, variáveis e URLs de OAuth correspondentes.
 
 LGPD ainda requer decisões institucionais sobre finalidade, base legal, retenção/exclusão, política de privacidade, responsáveis pelo tratamento e atendimento a titulares. Controle técnico de acesso não equivale a conformidade jurídica completa. Backup, recuperação, limites de requisições e operação em escala precisam de homologação própria.
+
+## Evidência do refinamento
+
+Consulte [refinement-validation.md](refinement-validation.md) para alterações, os 23 testes de navegador executados nesta rodada, comparação de tamanho do build e limites da validação local. O código refinado foi consolidado na `main`; o refinamento ainda não foi implantado na Vercel.

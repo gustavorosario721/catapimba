@@ -1,4 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
+import {
+  Card,
+  ConfirmDialog,
+  EmptyState,
+  LoadingState,
+  Status,
+} from "../components/app-ui";
 
 type Institution = {
   id: string;
@@ -18,6 +25,7 @@ export function PlatformPanel({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [denied, setDenied] = useState(false);
+  const [suspendTarget, setSuspendTarget] = useState<Institution | null>(null);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -39,7 +47,11 @@ export function PlatformPanel({
         "Seu acesso administrativo não está disponível. Atualize sua conta ou entre novamente.",
       );
     }
-    const body = await response.json();
+    const body = await response.json().catch(() => {
+      throw new Error(
+        "O serviço de instituições não respondeu como esperado. Tente novamente.",
+      );
+    });
     if (!response.ok)
       throw new Error(body.error ?? "Não foi possível concluir a operação.");
     return body;
@@ -127,23 +139,28 @@ export function PlatformPanel({
   }
 
   return (
-    <section
-      aria-label="Gestão de instituições"
-      style={{ marginBlock: 24, textAlign: "left" }}
-    >
+    <Card>
       <h2 className="section-title">Instituições</h2>
       <p>
         Gerencie as instituições da plataforma. Seu acesso de superadministrador
         não depende de vínculo institucional.
       </p>
-      {error && <p role="alert">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
+      {error && (
+        <p role="alert" className="notice error">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p role="status" className="notice">
+          {notice}
+        </p>
+      )}
       {loading ? (
-        <p role="status">Carregando instituições…</p>
+        <LoadingState>Carregando instituições…</LoadingState>
       ) : (
         !denied && (
           <>
-            <form onSubmit={create}>
+            <form onSubmit={create} className="workspace-form">
               <div className="field">
                 <label htmlFor="institution-name">Nome da instituição</label>
                 <input
@@ -175,45 +192,54 @@ export function PlatformPanel({
               </button>
             )}
             {!institutions.length && !error && (
-              <p>Nenhuma instituição cadastrada.</p>
+              <EmptyState>Nenhuma instituição cadastrada</EmptyState>
             )}
-            <ul style={{ listStyle: "none", padding: 0 }}>
+            <ul className="institution-list">
               {institutions.map((item) => (
-                <li
-                  key={item.id}
-                  style={{ borderTop: "1px solid #e5eaee", paddingBlock: 16 }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 12,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div style={{ overflowWrap: "anywhere" }}>
-                      <strong>{item.name}</strong>
-                      <br />
-                      <span className="status">
-                        {item.status === "active" ? "Ativa" : "Suspensa"}
-                      </span>
-                    </div>
-                    <button
-                      className="btn btn-ghost"
-                      disabled={busy}
-                      onClick={() => changeStatus(item)}
-                      aria-label={`${item.status === "active" ? "Suspender" : "Ativar"} ${item.name}`}
+                <li key={item.id} className="workspace-row">
+                  <div>
+                    <strong>{item.name}</strong>
+                    <br />
+                    <Status
+                      variant={item.status === "suspended" ? "paused" : ""}
                     >
-                      {item.status === "active" ? "Suspender" : "Ativar"}
-                    </button>
+                      {item.status === "active" ? "Ativa" : "Suspensa"}
+                    </Status>
                   </div>
+                  <button
+                    className="btn btn-ghost"
+                    disabled={busy}
+                    onClick={() => {
+                      if (item.status === "active") setSuspendTarget(item);
+                      else void changeStatus(item);
+                    }}
+                    aria-label={`${item.status === "active" ? "Suspender" : "Ativar"} ${item.name}`}
+                  >
+                    {item.status === "active" ? "Suspender" : "Ativar"}
+                  </button>
                 </li>
               ))}
             </ul>
           </>
         )
       )}
-    </section>
+      <ConfirmDialog
+        open={suspendTarget !== null}
+        title="Suspender instituição?"
+        confirmLabel="Suspender instituição"
+        onClose={() => setSuspendTarget(null)}
+        onConfirm={() => {
+          if (suspendTarget) {
+            void changeStatus(suspendTarget);
+            setSuspendTarget(null);
+          }
+        }}
+      >
+        <p>
+          Os vínculos e registros de {suspendTarget?.name} serão preservados. O
+          acesso à área institucional ficará bloqueado até a reativação.
+        </p>
+      </ConfirmDialog>
+    </Card>
   );
 }

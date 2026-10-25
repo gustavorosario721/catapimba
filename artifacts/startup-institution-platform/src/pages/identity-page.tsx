@@ -4,7 +4,8 @@ import type { Session } from "@supabase/supabase-js";
 import { isGoogleEnabled, supabase } from "../lib/supabase";
 import { WorkspaceApp } from "../workspace/app";
 import type { Identity } from "../workspace/types";
-import { Btn, Logo } from "../components/prototype-ui";
+import { Logo, LoadingState } from "../components/app-ui";
+import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 
 export function IdentityPage({
   mode,
@@ -130,7 +131,17 @@ export function IdentityPage({
       setSession(null);
       navigate("/login", { replace: true });
     } catch {
-      setError("Não foi possível sair. Tente novamente.");
+      // The SDK can clear this browser's session even when remote revocation fails.
+      const current = await supabase.auth.getSession().catch(() => null);
+      if (current && !current.error && !current.data.session) {
+        setIdentity(null);
+        setSession(null);
+        setError(
+          "A sessão neste navegador foi encerrada, mas não foi possível confirmar a revogação no serviço. Entre novamente se precisar continuar.",
+        );
+      } else {
+        setError("Não foi possível sair. Tente novamente.");
+      }
     } finally {
       setBusy(false);
     }
@@ -143,40 +154,56 @@ export function IdentityPage({
         token={session.access_token}
         onSignOut={signOut}
         refreshIdentity={() => setAttempt((v) => v + 1)}
+        authError={error}
+        signingOut={busy}
       />
     );
   }
   return (
-    <main className="auth-page">
+    <div className="auth-page">
       <header className="public-nav">
         <Link href="/">
           <Logo />
         </Link>
-        <Link href="/">Voltar ao início</Link>
+        <Link href="/" className="back-link">
+          <ArrowLeft size={16} aria-hidden="true" />
+          Voltar ao início
+        </Link>
       </header>
-      <section className="auth-card">
+      <main id="main-content" className="auth-card">
         <span className="eyebrow">ACESSO À PLATAFORMA</span>
-        <h1>
+        <span className="auth-symbol" aria-hidden="true">
+          <ShieldCheck size={28} />
+        </span>
+        <h1 tabIndex={-1}>
           {mode === "account"
             ? "Minha conta"
             : mode === "callback"
               ? "Concluindo seu acesso"
               : "Entrar na plataforma"}
         </h1>
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p role="alert" className="notice error">
+            {error}
+          </p>
+        )}
         {!supabase ? (
           <p>O acesso à plataforma ainda está sendo configurado.</p>
         ) : loading ? (
-          <p role="status">Verificando sua sessão…</p>
+          <LoadingState>Verificando sua sessão…</LoadingState>
         ) : mode === "account" && session ? (
           <>
             {!identity && !error && (
-              <p role="status">Consultando seus vínculos…</p>
+              <LoadingState>Consultando seus vínculos…</LoadingState>
             )}
             {error && (
-              <Btn kind="ghost" onClick={() => setAttempt((v) => v + 1)}>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setAttempt((v) => v + 1)}
+              >
                 Tentar novamente
-              </Btn>
+              </button>
             )}
             <button
               className="btn btn-primary"
@@ -197,16 +224,21 @@ export function IdentityPage({
               disabled={busy}
               onClick={signIn}
             >
-              {busy ? "Redirecionando…" : "Entrar com Google"}
+              {busy ? (
+                "Redirecionando…"
+              ) : (
+                <>
+                  Entrar com Google <ArrowRight size={18} aria-hidden="true" />
+                </>
+              )}
             </button>
           </>
         )}
-        <p style={{ marginTop: 24 }}>
-          <Link href="/instituicao">
-            Explorar demonstração com dados fictícios
-          </Link>
-        </p>
-      </section>
-    </main>
+        <div className="auth-links">
+          <Link href="/solicitar-acesso">Como solicitar acesso</Link>
+          <Link href="/recuperar-senha">Preciso de ajuda</Link>
+        </div>
+      </main>
+    </div>
   );
 }

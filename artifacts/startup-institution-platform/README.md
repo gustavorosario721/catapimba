@@ -1,37 +1,24 @@
-# Plataforma de Gestão e Avaliação
+# Catapimba — interface
 
-Protótipo navegável em português para instituições de ensino, incubadoras e
-programas de inovação acompanharem projetos, bancas, avaliações e resultados.
-
-## Executar
-
-O aplicativo é um frontend React + Vite neste workspace:
+Aplicação React + Vite em português, integrada à API Express e ao Supabase Auth.
+A entrada é Google OAuth. A área `/conta` mostra os módulos autorizados para cada
+vínculo institucional. Não existe login simulado ou conteúdo de demonstração.
 
 ```bash
 pnpm --filter @workspace/startup-institution-platform run dev
-```
-
-Para verificar os tipos:
-
-```bash
 pnpm --filter @workspace/startup-institution-platform run typecheck
 ```
 
-## O que é demonstrativo
+Execute a API local na porta 3001; o Vite encaminha `/api` para ela em desenvolvimento.
+Configure `.env.local` seguindo `.env.example`. Nunca inclua chaves administrativas.
 
-- Os usuários, instituições, projetos, equipes, bancas e notas são fictícios.
-- O seletor de perfil e instituição é apenas para demonstração; não autentica
-  usuários nem protege dados.
-- Formulários e alterações de status atualizam somente o estado do protótipo.
-  Não há banco de dados nem sincronização entre sessões.
-- A exportação de relatórios gera um CSV de demonstração no navegador.
-- O som do pódio é gerado localmente e não depende de serviços externos.
+`src/components/app-ui.tsx` e `src/index.css` compõem o sistema visual compartilhado,
+com tipografia de sistema e tokens de cor, espaçamento e bordas. A navegação móvel
+usa um menu expansível; tabelas extensas têm rolagem dentro do próprio componente.
+As confirmações usam `dialog` nativo com suporte a teclado e restauração de foco.
 
-## Arquitetura aprovada
+O som opcional do pódio é gerado localmente. Os dados de projetos, avaliações e
+resultados vêm exclusivamente da API, sujeitos às permissões do servidor.
 
-Preservar React + Vite e Express, com implantação futura em um único projeto
-Vercel. Usar Supabase para PostgreSQL e autenticação. O fluxo inicial recomendado
-é Google OAuth via Supabase Auth; estar autenticado não concede acesso a uma
-instituição sem vínculo aprovado. Essas integrações ainda não estão implementadas.
-
-Consulte o [README da raiz](../../README.md) para instalação e verificação.
+Consulte o [README da raiz](../../README.md) e o [roteiro de uso](../../docs/workspace.md)
+para execução integrada, testes e limites conhecidos.

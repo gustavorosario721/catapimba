@@ -1,4 +1,4 @@
-# Configuração da primeira entrega de identidade
+# Configuração Supabase e autenticação
 
 ## Estado verificado
 
@@ -10,13 +10,17 @@ Supabase e está registrada no histórico remoto. O arquivo foi criado inicialme
 pela CLI; seu prefixo foi alinhado à versão efetivamente registrada pelo servidor.
 Não reaplicar manualmente a migration em um banco que já a possui.
 
-As tabelas contêm apenas a fundação de identidade, sem projetos ou dados demo.
+As migrations seguintes acrescentam instituições administráveis, projetos, equipes,
+critérios, bancas e avaliações. O histórico está em `supabase/migrations`. Não execute
+resets nem reaplique migrations já registradas. Fixtures vivem apenas em `supabase/tests`
+e são desfeitas por rollback.
 `supabase/tests/identity-rls.sql` executa fixtures temporárias com rollback e verifica
 RLS sob os papéis PostgreSQL `authenticated` e `anon`. Isso testa as políticas no
 banco real; não equivale a concluir uma autenticação Google ponta a ponta.
 
-O advisor de segurança retornou somente um aviso informativo de RLS sem políticas
-em `private.audit_events`. Isso é intencional: a tabela de auditoria é privada,
+A validação anterior do advisor registrou RLS sem políticas em `private.audit_events`
+e proteção contra senhas vazadas desabilitada no Auth (o aplicativo usa Google).
+O aviso sobre auditoria é intencional: a tabela de auditoria é privada,
 sem grants aos clientes e sem leitura/escrita pública.
 [Descrição do aviso](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
 
@@ -24,14 +28,16 @@ sem grants aos clientes e sem leitura/escrita pública.
 
 - `/login`: entrada Google, sem seletor de identidade fictícia.
 - `/auth/callback`: conclusão PKCE e tratamento de acesso cancelado/incompleto.
-- `/conta`: consulta dos próprios vínculos e saída da sessão local.
+- `/conta` e `/app/*`: módulos reais conforme os vínculos e as capacidades da pessoa.
+- `/solicitar-acesso`: instruções, sem envio; solicitação real fica em `/app/access`.
+- `/recuperar-senha`: orientação para recuperação Google, sem senha própria.
 - `/api/auth/me`: valida o bearer token com Supabase Auth e consulta vínculos pela
   Data API com o mesmo JWT. Sem token/malformado: 401. Configuração ou serviço
   indisponível: 503. Respostas usam `Cache-Control: no-store`.
 
-O protótipo continua acessível separadamente em `/instituicao`, identificado como
-Demonstração. Seus registros são fictícios. Ter sessão real não converte seus dados
-em persistência nem transforma esse seletor em autenticação.
+`/instituicao` e os outros endereços antigos encaminham para módulos reais, com
+verificação de sessão. Não há seletor de identidades, login simulado ou dados
+fictícios no aplicativo.
 
 ## Ativação Google — ação no painel
 
@@ -58,9 +64,9 @@ A entrada real já foi observada; as instruções abaixo documentam a configura�
 7. Abra `/login`, entre com Google, confirme `/conta`, saia e verifique que a conta
    deixa de ser exibida. Teste também cancelamento e uma sessão inválida na API.
 
-Não conceder privilégio administrativo a quem completar esse fluxo. A conta sem
-vínculos verá a orientação de aguardar o administrador. Solicitação, aprovação e
-CRUD administrativo serão implementados na próxima entrega.
+Não conceder privilégio administrativo a quem completar esse fluxo. A conta sem vínculos pode solicitar acesso em Meus acessos. A solicitação fica pendente
+até aprovação. Papéis institucionais são atribuídos pela gestão autorizada; somente
+o superadministrador nomeia administradores institucionais.
 
 ## Variáveis e execução local
 
@@ -90,13 +96,15 @@ isolamento de outra identidade, bloqueio de autopromoção e revogação efetiva
 revogação de teste foi revertida, preservando o administrador ativo.
 
 A interface em Minha conta inclui o painel real de instituições para a concessão
-administrativa. A tela Superadmin da demonstração permanece fictícia e separada.
+administrativa. A demonstração antiga foi removida; `/superadmin` encaminha para
+`/app/institutions`, que exige a concessão real.
 
 ## Painel real de instituições
 
-A conta superadministradora agora recebe o painel em `/conta`, mesmo sem vínculo
-institucional. A mensagem de vínculo pendente fica restrita às demais contas.
-O painel lista, cria, suspende e reativa instituições persistidas no Supabase.
+A conta superadministradora acessa a área real em `/conta`, mesmo sem vínculo
+institucional. O módulo `/app/institutions` lista, cria, suspende e reativa instituições
+persistidas no Supabase. A suspensão exige confirmação na interface. As operações
+continuam sujeitas às mesmas verificações do servidor e do banco.
 
 `GET/POST /api/admin/institutions` e `PATCH /api/admin/institutions/:id` validam a
 identidade e a concessão atual no servidor. As mutações usam RPCs com a identidade
@@ -109,11 +117,12 @@ são atômicos; reaplicar o mesmo status não duplica o histórico.
 As migrations `platform_institutions` e `isolate_platform_operations` foram aplicadas
 e alinhadas às versões do histórico remoto. `supabase/tests/platform-institutions.sql`
 passou no banco real com fixtures desfeitas, incluindo negação a anônimos, usuários
-comuns e administradores revogados, validação de entradas e auditoria. Os 11 testes
-HTTP usam um Supabase simulado para isolar a autorização da API. O teste Chromium
-móvel usa respostas simuladas para verificar o fluxo de interface e a ausência do
-bloqueio por vínculo; isso não representa uma sessão real do administrador no browser
-do agente. A validação final com a conta Google do responsável ocorre no preview.
+comuns e administradores revogados, validação de entradas e auditoria. Os 17 testes HTTP existentes usam um Supabase simulado para isolar o transporte e
+a autorização da API. Os testes de navegador também usam fixtures explícitas, sem
+sessão Google real. Eles verificam a interface e estados de erro; não comprovam RLS.
+A validação de banco foi feita anteriormente com testes SQL e rollback. Nesta rodada
+de refinamento não houve alteração nem reexecução de migrations no banco remoto.
+Consulte `workspace.md` para o fluxo atual e a homologação com contas reais.
 
 O advisor não aponta mais RPCs privilegiadas no schema exposto. A auditoria privada
 permanece sem políticas de leitura pública por intenção; o aviso de proteção contra

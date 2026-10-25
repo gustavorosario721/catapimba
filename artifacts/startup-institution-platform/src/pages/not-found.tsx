@@ -1,23 +1,23 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
-
+import { Link } from "wouter";
+import { PublicHeader } from "../components/app-ui";
 export default function NotFound() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              404 Page Not Found
-            </h1>
-          </div>
-
-          <p className="mt-4 text-sm text-gray-600">
-            Did you forget to add the page to the router?
-          </p>
-        </CardContent>
-      </Card>
+    <div className="auth-page">
+      <PublicHeader />
+      <main id="main-content" className="auth-card">
+        <span className="eyebrow">PÁGINA NÃO ENCONTRADA</span>
+        <h1 tabIndex={-1}>Esse caminho não está disponível.</h1>
+        <p>
+          O endereço pode ter mudado. Acesse sua conta para encontrar seus
+          projetos e instituições.
+        </p>
+        <Link href="/conta" className="btn btn-primary">
+          Ir para minha conta
+        </Link>
+        <Link className="text-link" href="/">
+          Voltar ao início
+        </Link>
+      </main>
     </div>
   );
 }

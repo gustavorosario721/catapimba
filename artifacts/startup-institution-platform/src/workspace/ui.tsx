@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-export { Card, PageHead, Stat, Status } from "../components/prototype-ui";
+import { EmptyState } from "../components/app-ui";
+export { Card, PageHead, Stat, Status } from "../components/app-ui";
 
 export function InputField({
   label,
@@ -29,11 +30,7 @@ export function SaveButton({
   );
 }
 export function Empty({ children }: { children: ReactNode }) {
-  return (
-    <div className="empty-state">
-      <strong>{children}</strong>
-    </div>
-  );
+  return <EmptyState>{children}</EmptyState>;
 }
 export function dateTime(value: string) {
   return new Date(value).toLocaleString("pt-BR", {

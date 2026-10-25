@@ -1,6 +1,6 @@
-# Plataforma de Gestão e Avaliação de Startups
+# Catapimba — Gestão e Avaliação de Startups
 
-Aplicação Vite + Express em um único projeto Vercel, com Google via Supabase Auth e PostgreSQL. A área real `/conta` oferece gestão de instituições, usuários e acessos, projetos/equipes, critérios, bancas, avaliações, resultados, CSV, pódio e auditoria. O protótipo visual permanece nas rotas demonstrativas.
+Aplicação Vite + Express em um único projeto Vercel, com Google via Supabase Auth e PostgreSQL. A área real `/conta` oferece gestão de instituições, usuários e acessos, projetos/equipes, critérios, bancas, avaliações, resultados, CSV, pódio e auditoria. Não há dados ou login de demonstração. Os endereços antigos, como `/instituicao`, encaminham para a área real e exigem sessão.
 
 Consulte [o roteiro de uso, permissões, testes e limites](docs/workspace.md) e [a configuração Supabase](docs/setup-supabase.md).
 
@@ -36,7 +36,7 @@ O health check confirma apenas o processo, sem consultar banco. Para a área rea
 
 O frontend local encaminha `/api` para o Express. Em Vercel, `vercel.json` direciona `/api/*` à função `api/index.mjs` e as rotas da interface à SPA. A raiz do projeto Vercel é a raiz deste monorepo. Não existe servidor separado no Render.
 
-O preview autenticado usa a branch `feat/identity-foundation`. Produção precisa de variáveis e callbacks próprios. Autorização de plataforma é concedida por procedimento controlado, nunca por cadastro público; não use metadados de perfil para conceder privilégios.
+A branch padrão do código é `main`. O preview autenticado existente usa `feat/identity-foundation`. O deploy automático da `main` está desativado em `vercel.json` até autorização explícita de publicação. Produção precisa de variáveis e callbacks próprios. Autorização de plataforma é concedida por procedimento controlado, nunca por cadastro público; não use metadados de perfil para conceder privilégios.
 
 ## Verificação
 
@@ -46,10 +46,14 @@ pnpm test:routing
 pnpm check:deployment https://URL-DO-PREVIEW
 ```
 
-Os testes SQL com rollback estão em `supabase/tests`. Há teste de navegador opcional descrito em `docs/workspace.md`. Diferencie build, testes com API simulada, testes reais de banco e validação de implantação.
+Os testes SQL com rollback estão em `supabase/tests`. O teste de navegador `python3 scripts/workspace-browser.py` usa fixtures restritas ao processo de teste; exige Vite preview local, Python Playwright e Chromium. Consulte `docs/workspace.md`. Diferencie build, testes com API simulada, testes reais de banco e validação de implantação.
 
 ## Credenciais e orçamento
 
 Nunca versionar segredos. `VITE_*` é público: nunca incluir senha de banco, `service_role` ou segredo OAuth. O backend usa JWT do usuário e chave publicável. As funções privilegiadas verificam autorização explicitamente, além de RLS para consultas diretas.
 
 Orçamento: R$ 0 durante desenvolvimento e demonstração. Nenhum plano pago foi contratado. Vercel Hobby tem restrições de uso comercial; Supabase Free tem cotas e pode pausar por inatividade. Monitorar limites antes de expandir uso.
+
+O refinamento visual usa componentes compartilhados, tipografia de sistema e uma paleta única. Solicitação de acesso é feita somente na conta autenticada; recuperação de acesso é tratada pelo Google, sem senha própria ou envio de e-mail simulado.
+
+O [relatório de refinamento](docs/refinement-validation.md) registra o que mudou, testes locais e limites. O código foi consolidado na `main`; a publicação na Vercel continua dependendo de autorização. A mudança de branch padrão não substitui automaticamente a versão já implantada.
