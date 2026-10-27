@@ -1,3 +1,4 @@
+import { NewResultsNotice } from "../podium/NewResultsNotice";
 import { apiFetch } from "../../lib/api";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -449,6 +450,13 @@ export function WorkspaceApp({
               {notice}
             </div>
           )}
+          {data && module === "overview" && (
+            <NewResultsNotice
+              results={data.results}
+              userId={identity.user.id}
+              institutionId={institutionId}
+            />
+          )}
           {module === "institutions" && identity.isPlatformAdministrator ? (
             <PlatformPanel
               token={token}
@@ -478,7 +486,8 @@ export function WorkspaceApp({
           ) : loading ? (
             <Card>
               <LoadingState>
-                Carregando seu contexto institucional… A primeira conexão pode levar mais tempo.
+                Carregando seu contexto institucional… A primeira conexão pode
+                levar mais tempo.
               </LoadingState>
             </Card>
           ) : !data &&
@@ -486,7 +495,8 @@ export function WorkspaceApp({
               (institutionId && institution?.status === "active" && !error)) ? (
             <Card>
               <LoadingState>
-                Carregando seu contexto institucional… A primeira conexão pode levar mais tempo.
+                Carregando seu contexto institucional… A primeira conexão pode
+                levar mais tempo.
               </LoadingState>
             </Card>
           ) : !data && error ? (
@@ -585,6 +595,7 @@ export function WorkspaceApp({
               key={`${institutionId}:${module}`}
               data={data}
               token={token}
+              userId={identity.user.id}
               institutionId={institutionId}
               mode={
                 module === "podium"

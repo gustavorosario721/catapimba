@@ -582,10 +582,7 @@ kbd {
   }
 }
 /* Keep existing result panels legible when the global palette changes. */
-:root[data-theme="dark"] :is(.journey-card, .podium-hero) {
+:root[data-theme="dark"] .journey-card {
   background: #163d49;
   color: #edf6f4;
-}
-:root[data-theme="dark"] .podium-block {
-  color: #163d49;
 }

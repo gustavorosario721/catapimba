@@ -1,6 +1,6 @@
 # Catapimba — Gestão e Avaliação de Startups
 
-Plataforma multi-institucional em português. **Frontend React/Vite no Vercel; API Express no Render; PostgreSQL e Google OAuth no Supabase.** Não há login simulado nem conteúdo fictício em produção.
+Plataforma multi-institucional em português. **Frontend React/Vite no Vercel; API Express no Render; PostgreSQL e Google OAuth no Supabase.** Não há login simulado nem dados de demonstração embutidos no produto. Os dados de teste autorizados ficam exclusivamente na instituição identificada como laboratório.
 
 ## Estrutura
 
@@ -50,12 +50,18 @@ O login Google retorna ao frontend em `/auth/callback`, autorizado na configura�
 
 ```bash
 pnpm test:routing
+pnpm test:podium
 python3 scripts/workspace-browser.py
 python3 scripts/login-browser.py
+python3 scripts/podium-browser.py
 pnpm check:deployment https://FRONTEND https://API
 ```
 
 Os testes HTTP e de navegador usam fixtures, não sessões reais. Os testes de navegador exigem Playwright/Chromium e um preview Vite local. Os SQL usam transações com rollback. Consulte [permissões e uso](docs/workspace.md), [configuração Supabase](docs/setup-supabase.md) e [implantação](docs/deployment.md).
+
+## Premiação
+
+O pódio apresenta resultados encerrados, completos e publicados, com suspense, revelação do terceiro ao primeiro lugar e tratamento de empates. Cada pessoa assiste no próprio ritmo, com música instrumental opcional, pausa, repetição, tela cheia e modo tranquilo. A primeira visita ao pódio inicia a apresentação sem som; a visão geral avisa sobre premiações ainda não assistidas. Consulte [funcionamento, dados de teste e validação](docs/podium.md).
 
 ## Segurança e orçamento
 

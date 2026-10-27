@@ -1,74 +1,44 @@
 import { apiFetch } from "../../lib/api";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearch } from "wouter";
+import { PodiumExperience } from "../podium/PodiumExperience";
+import { resultVersion } from "../podium/model";
+import { SearchSelect } from "../../components/inputs/search-select";
 import type { WorkspaceData } from "./types";
 import { Card, Empty, InputField, score } from "./ui";
 
 export function ResultsModule({
   data,
   token,
+  userId,
   institutionId,
   mode,
 }: {
   data: WorkspaceData;
   token: string;
+  userId: string;
   institutionId: string;
   mode: "results" | "reports" | "podium";
 }) {
-  const [eventId, setEventId] = useState("");
+  const search = useSearch();
+  const requested = new URLSearchParams(search).get("banca") ?? "";
+  const [eventId, setEventId] = useState(requested);
+  useEffect(() => {
+    if (
+      requested &&
+      data.results.some((result) => result.event_id === requested)
+    )
+      setEventId(requested);
+  }, [requested]);
   const [query, setQuery] = useState("");
-  const [confetti, setConfetti] = useState(true);
-  const [sound, setSound] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
-  const audio = useRef<AudioContext | null>(null);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const result =
-    data.results.find((r) => r.event_id === eventId) ?? data.results[0];
-  function stopAudio() {
-    if (timer.current) clearInterval(timer.current);
-    timer.current = null;
-    const context = audio.current;
-    audio.current = null;
-    if (context && context.state !== "closed")
-      void context.close().catch(() => {});
-  }
-  useEffect(() => {
-    setSound(false);
-    return stopAudio;
-  }, [result?.event_id, mode]);
-  async function toggleSound() {
-    if (sound) {
-      stopAudio();
-      setSound(false);
-      return;
-    }
-    try {
-      const context = new AudioContext();
-      audio.current = context;
-      await context.resume();
-      const play = () => {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.frequency.value = 660;
-        gain.gain.setValueAtTime(0.035, context.currentTime);
-        gain.gain.exponentialRampToValueAtTime(
-          0.001,
-          context.currentTime + 0.25,
-        );
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.26);
-      };
-      play();
-      timer.current = setInterval(play, 1800);
-      setSound(true);
-    } catch {
-      stopAudio();
-      setSound(false);
-      setError("Não foi possível reproduzir o som neste dispositivo.");
-    }
-  }
+    data.results.find((result) => result.event_id === eventId) ??
+    data.results.find(
+      (result) => result.published && result.status === "closed",
+    ) ??
+    data.results[0];
   async function download(type: "projects" | "results") {
     if (downloading) return;
     setDownloading(true);
@@ -144,16 +114,18 @@ export function ResultsModule({
         ) : (
           <>
             <InputField label="Banca dos resultados">
-              <select
+              <SearchSelect
+                label="Banca dos resultados"
                 value={result?.event_id ?? ""}
-                onChange={(e) => setEventId(e.target.value)}
-              >
-                {data.results.map((r) => (
-                  <option key={r.event_id} value={r.event_id}>
-                    {r.name} · {r.published ? "Publicado" : "Restrito à gestão"}
-                  </option>
-                ))}
-              </select>
+                onChange={setEventId}
+                options={data.results.map((result) => ({
+                  value: result.event_id,
+                  label: result.name,
+                  description: result.published
+                    ? "Publicado para a instituição"
+                    : "Restrito à gestão",
+                }))}
+              />
             </InputField>
             <p className="notice">
               {result?.status === "closed"
@@ -165,106 +137,59 @@ export function ResultsModule({
                 : "Ainda não publicado"}
             </p>
             {mode === "podium" && result && (
+              <PodiumExperience
+                key={`${result.event_id}:${resultVersion(result)}`}
+                result={result}
+                userId={userId}
+                institutionId={institutionId}
+              />
+            )}
+            {mode !== "podium" && (
               <>
-                {result.status !== "closed" ? (
-                  <p>Encerre a banca antes da premiação.</p>
-                ) : (
-                  <div className="podium-hero">
-                    <h2>{result.name}</h2>
-                    <div className="workspace-actions">
-                      <button
-                        className="btn btn-ghost"
-                        aria-pressed={confetti}
-                        onClick={() => setConfetti((v) => !v)}
-                      >
-                        {confetti ? "Desativar" : "Ativar"} confete
-                      </button>
-                      <button
-                        className="btn btn-ghost"
-                        aria-pressed={sound}
-                        onClick={toggleSound}
-                      >
-                        {sound ? "Desligar som" : "Ligar som"}
-                      </button>
-                    </div>
-                    {confetti && (
-                      <div className="confetti" aria-hidden="true">
-                        {Array.from({ length: 20 }, (_, i) => (
-                          <i
-                            key={i}
-                            style={{
-                              left: `${(i * 37) % 100}%`,
-                              background: ["#56c9a7", "#ecc66a", "#d5e0e2"][
-                                i % 3
-                              ],
-                              animationDelay: `${-(i % 7) * 0.3}s`,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                    <div className="workspace-podium">
-                      {result.rows
-                        .filter((r) => r.position !== null && r.position <= 3)
-                        .map((r) => (
-                          <article
-                            key={r.id}
-                            className={`podium-place ${r.position === 1 ? "first" : r.position === 2 ? "second" : "third"}`}
-                          >
-                            <div className="podium-name">{r.name}</div>
-                            <div className="podium-score">
-                              {score(r.score)} / 5
-                            </div>
-                            <div className="podium-block">{r.position}º</div>
-                          </article>
-                        ))}
-                    </div>
-                  </div>
+                <InputField label="Pesquisar no resultado">
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Nome do projeto"
+                  />
+                </InputField>
+                <div
+                  className="table-wrap"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Classificação dos projetos"
+                >
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Posição</th>
+                        <th>Projeto</th>
+                        <th>Média</th>
+                        <th>Avaliações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((r) => (
+                        <tr key={r.id}>
+                          <td>{r.position ? `${r.position}º` : "—"}</td>
+                          <td>{r.name}</td>
+                          <td>{score(r.score)}</td>
+                          <td>
+                            {r.submitted}/{r.expected}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {!rows.length && (
+                  <Empty>
+                    {result?.rows.length
+                      ? "Nenhum projeto corresponde à pesquisa"
+                      : "Nenhuma avaliação registrada nesta banca"}
+                  </Empty>
                 )}
               </>
-            )}
-            <InputField label="Pesquisar no resultado">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Nome do projeto"
-              />
-            </InputField>
-            <div
-              className="table-wrap"
-              tabIndex={0}
-              role="region"
-              aria-label="Classificação dos projetos"
-            >
-              <table>
-                <thead>
-                  <tr>
-                    <th>Posição</th>
-                    <th>Projeto</th>
-                    <th>Média</th>
-                    <th>Avaliações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.id}>
-                      <td>{r.position ? `${r.position}º` : "—"}</td>
-                      <td>{r.name}</td>
-                      <td>{score(r.score)}</td>
-                      <td>
-                        {r.submitted}/{r.expected}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {!rows.length && (
-              <Empty>
-                {result?.rows.length
-                  ? "Nenhum projeto corresponde à pesquisa"
-                  : "Nenhuma avaliação registrada nesta banca"}
-              </Empty>
             )}
           </>
         )}

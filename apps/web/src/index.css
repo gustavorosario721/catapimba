@@ -995,97 +995,9 @@ tbody tr:hover {
   margin-top: 28px;
   flex-wrap: wrap;
 }
-.podium-hero {
-  border-radius: 18px;
-  background: var(--navy);
-  color: #f4faf8;
-  padding: 30px;
-  position: relative;
-  overflow: hidden;
-  margin: 22px 0;
-}
-.podium-hero h2 {
-  color: #f4faf8;
-}
-.podium-hero .workspace-actions {
-  position: relative;
-  z-index: 1;
-}
-.workspace-podium {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin-top: 40px;
-}
-.podium-place {
-  text-align: center;
-  width: min(200px, 100%);
-  flex: 1 1 120px;
-  min-width: 0;
-}
-.podium-name {
-  color: white;
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  overflow-wrap: anywhere;
-}
-.podium-score {
-  color: #bce3d9;
-  font-size: 0.9rem;
-  margin-bottom: 20px;
-  font-variant-numeric: tabular-nums;
-}
-.podium-block {
-  display: grid;
-  place-items: center;
-  border-radius: 14px 14px 0 0;
-  color: var(--navy);
-  font-size: 2.5rem;
-  font-weight: 700;
-}
-.first .podium-block {
-  height: 135px;
-  background: #edd497;
-}
-.second .podium-block {
-  height: 105px;
-  background: #c4dce0;
-}
-.third .podium-block {
-  height: 80px;
-  background: #e3bc9d;
-}
-.confetti {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.confetti i {
-  position: absolute;
-  width: 6px;
-  height: 11px;
-  opacity: 0.8;
-  animation: fall 2.8s linear infinite;
-}
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-@keyframes fall {
-  from {
-    transform: translateY(-20px) rotate(0);
-    opacity: 0;
-  }
-  20% {
-    opacity: 0.8;
-  }
-  to {
-    transform: translateY(430px) rotate(360deg);
-    opacity: 0;
   }
 }
 @media (min-width: 1500px) {
@@ -1331,12 +1243,6 @@ tbody tr:hover {
   .confirm-dialog {
     padding: 26px 22px;
   }
-  .podium-hero {
-    padding: 24px 16px;
-  }
-  .workspace-podium {
-    gap: 12px;
-  }
   .field :is(input, select, textarea) {
     font-size: 16px;
   }
@@ -1348,9 +1254,6 @@ tbody tr:hover {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
-  }
-  .confetti {
-    display: none;
   }
 }
 .institution-list {
