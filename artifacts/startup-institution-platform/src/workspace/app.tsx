@@ -34,7 +34,8 @@ import type {
   WorkspaceData,
 } from "./types";
 import { roleNames } from "./types";
-import { Card, PageHead, Stat, Empty, auditNames, dateTime } from "./ui";
+import { Card, PageHead, Empty, auditNames, dateTime } from "./ui";
+import { WorkspaceOverview } from "./overview";
 
 export function WorkspaceApp({
   identity,
@@ -266,8 +267,6 @@ export function WorkspaceApp({
     { id: "access", name: "Meus acessos", icon: UserRound, show: true },
   ];
   const current = nav.find((n) => n.id === module && n.show);
-  const pending =
-    data?.memberships.filter((m) => m.status === "pending").length ?? 0;
   const navigation = (
     <nav className="nav-list" aria-label="Navegação principal">
       {nav
@@ -540,66 +539,7 @@ export function WorkspaceApp({
               <Empty>Esta página não está disponível para seu perfil</Empty>
             </Card>
           ) : module === "overview" ? (
-            <>
-              <div className="stat-grid">
-                <Stat
-                  label="Projetos no seu contexto"
-                  value={data.projects.filter((p) => !p.archived).length}
-                  icon={<Lightbulb />}
-                  foot="projetos que você pode consultar"
-                />
-                <Stat
-                  label="Bancas abertas"
-                  value={data.events.filter((e) => e.status === "open").length}
-                  icon={<PanelsTopLeft />}
-                  foot="no seu contexto de acesso"
-                />
-                <Stat
-                  label="Avaliações registradas"
-                  value={data.evaluations.length}
-                  icon={<ClipboardCheck />}
-                  foot="registros visíveis ao seu perfil"
-                />
-                <Stat
-                  label="Resultados disponíveis"
-                  value={data.results.length}
-                  icon={<Trophy />}
-                  foot="bancas autorizadas"
-                />
-              </div>
-              <div className="split">
-                <Card>
-                  <h2 className="section-title">O que pede atenção</h2>
-                  {data.capabilities.manageMembers && (
-                    <p>
-                      {pending} solicitações pendentes.{" "}
-                      <Link href="/app/members">Revisar acessos</Link>
-                    </p>
-                  )}
-                  <p>
-                    {data.events.filter((e) => e.status === "draft").length}{" "}
-                    bancas em preparação.
-                  </p>
-                  <Link className="btn btn-primary" href="/app/projects">
-                    Acompanhar projetos
-                  </Link>
-                </Card>
-                <Card>
-                  <h2 className="section-title">Seu espaço de trabalho</h2>
-                  <p>{identity.user.email}</p>
-                  <p>
-                    {identity.isPlatformAdministrator
-                      ? "Administração global"
-                      : ownRoles}
-                  </p>
-                  <p>
-                    Você está em {data.institution.name}. Use o seletor no topo
-                    para alternar entre suas instituições.
-                  </p>
-                  <Link href="/app/access">Consultar meus vínculos</Link>
-                </Card>
-              </div>
-            </>
+            <WorkspaceOverview data={data} roleLabel={roleLabel} />
           ) : module === "members" ? (
             <MembersModule
               key={institutionId}
