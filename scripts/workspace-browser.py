@@ -403,12 +403,8 @@ class WorkspaceTests(unittest.TestCase):
         s=Scenario(self.browser, width=1440)
         s.data['results']=[dict(event_id='e1',name='Banca de teste',status='closed',published=False,rows=[dict(id='p1',name='Projeto de teste',score=4,position=1,submitted=2,expected=2)])]
         p=s.goto('/app/podium')
-        expect(p.get_by_text('4,00 / 5',exact=True)).to_be_visible()
-        expect(p.locator('.podium-place')).to_have_count(1)
-        p.get_by_role('button',name='Desativar confete').click()
-        expect(p.locator('.confetti')).to_have_count(0)
-        p.get_by_role('button',name='Ligar som').click()
-        expect(p.get_by_role('button',name='Desligar som')).to_have_attribute('aria-pressed','true')
+        expect(p.get_by_text('Publique o resultado',exact=False)).to_be_visible()
+        expect(p.get_by_role('dialog')).to_have_count(0)
         s.navigate('Relatórios')
         with p.expect_download() as download:
             p.get_by_role('button',name='Exportar portfólio autorizado (CSV)').click()

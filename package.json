@@ -12,7 +12,8 @@
     "check:deployment": "node scripts/src/check-deployment.ts",
     "build:web": "pnpm run typecheck:libs && pnpm --filter @workspace/startup-institution-platform run typecheck && pnpm --filter @workspace/startup-institution-platform run build",
     "build:api": "pnpm run typecheck:libs && pnpm --filter @workspace/api-server run typecheck && pnpm --filter @workspace/api-server run build",
-    "start:api": "pnpm --filter @workspace/api-server run start"
+    "start:api": "pnpm --filter @workspace/api-server run start",
+    "test:podium": "node --test scripts/src/podium.test.mjs"
   },
   "private": true,
   "devDependencies": {
