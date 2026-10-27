@@ -1,3 +1,4 @@
+import { apiFetch } from "../lib/api";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   Card,
@@ -32,7 +33,7 @@ export function PlatformPanel({
   const [attempt, setAttempt] = useState(0);
 
   async function request(path: string, options: RequestInit = {}) {
-    const response = await fetch(`/api/admin/institutions${path}`, {
+    const response = await apiFetch(`/api/admin/institutions${path}`, {
       ...options,
       cache: "no-store",
       headers: {

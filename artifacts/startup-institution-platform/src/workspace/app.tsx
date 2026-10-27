@@ -1,3 +1,4 @@
+import { apiFetch } from "../lib/api";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
@@ -88,7 +89,7 @@ export function WorkspaceApp({
     .join(", ");
 
   async function api(url: string, options: RequestInit = {}) {
-    const response = await fetch(`/api${url}`, {
+    const response = await apiFetch(`/api${url}`, {
       ...options,
       headers: {
         Authorization: `Bearer ${token}`,
@@ -477,7 +478,7 @@ export function WorkspaceApp({
           ) : loading ? (
             <Card>
               <LoadingState>
-                Carregando seu contexto institucional…
+                Carregando seu contexto institucional… A primeira conexão pode levar mais tempo.
               </LoadingState>
             </Card>
           ) : !data &&
@@ -485,7 +486,7 @@ export function WorkspaceApp({
               (institutionId && institution?.status === "active" && !error)) ? (
             <Card>
               <LoadingState>
-                Carregando seu contexto institucional…
+                Carregando seu contexto institucional… A primeira conexão pode levar mais tempo.
               </LoadingState>
             </Card>
           ) : !data && error ? (

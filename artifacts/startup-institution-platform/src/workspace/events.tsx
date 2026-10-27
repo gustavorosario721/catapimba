@@ -1,3 +1,4 @@
+import { MultiChoice } from "../components/inputs/search-select";
 import { useState, type FormEvent } from "react";
 import type { Command, Event, WorkspaceData } from "./types";
 import { ConfirmDialog } from "../components/app-ui";
@@ -72,8 +73,6 @@ export function EventsModule({
       setEditing(null);
     }
   }
-  const toggle = (items: string[], id: string) =>
-    items.includes(id) ? items.filter((x) => x !== id) : [...items, id];
   const filtered = data.events.filter((e) => !filter || e.status === filter);
   const who = (id: string) =>
     data.people.find((p) => p.id === id)?.name ?? "Avaliador";
@@ -152,48 +151,36 @@ export function EventsModule({
                 {dateError}
               </p>
             )}
-            <fieldset>
-              <legend>Projetos da banca</legend>
-              {!data.projects.some((p) => !p.archived) && (
-                <p>Cadastre projetos ativos antes de abrir a banca.</p>
-              )}
-              {data.projects
+            <MultiChoice
+              label="Projetos da banca"
+              value={projectIds}
+              onChange={setProjectIds}
+              disabled={busy}
+              options={data.projects
                 .filter((p) => !p.archived)
-                .map((p) => (
-                  <label className="workspace-check" key={p.id}>
-                    <input
-                      type="checkbox"
-                      checked={projectIds.includes(p.id)}
-                      onChange={() => setProjectIds(toggle(projectIds, p.id))}
-                    />
-                    {p.name}
-                  </label>
-                ))}
-            </fieldset>
-            <fieldset>
-              <legend>Avaliadores com vínculo ativo</legend>
-              {!data.memberships.some(
-                (m) => m.status === "active" && m.roles.includes("evaluator"),
-              ) && (
-                <p>Peça à gestão para vincular avaliadores à instituição.</p>
-              )}
-              {data.memberships
+                .map((p) => ({
+                  value: p.id,
+                  label: p.name,
+                  description: `${p.category || "Sem categoria"} · ${p.stage} · ${p.year}.${p.semester}`,
+                }))}
+              empty="Cadastre projetos ativos antes de abrir a banca."
+            />
+            <MultiChoice
+              label="Avaliadores com vínculo ativo"
+              value={evaluators}
+              onChange={setEvaluators}
+              disabled={busy}
+              options={data.memberships
                 .filter(
                   (m) => m.status === "active" && m.roles.includes("evaluator"),
                 )
-                .map((m) => (
-                  <label className="workspace-check" key={m.user_id}>
-                    <input
-                      type="checkbox"
-                      checked={evaluators.includes(m.user_id)}
-                      onChange={() =>
-                        setEvaluators(toggle(evaluators, m.user_id))
-                      }
-                    />
-                    {who(m.user_id)}
-                  </label>
-                ))}
-            </fieldset>
+                .map((m) => ({
+                  value: m.user_id,
+                  label: who(m.user_id),
+                  description: "Avaliador · vínculo ativo nesta instituição",
+                }))}
+              empty="Peça à gestão para vincular avaliadores à instituição."
+            />
             <p>
               Projetos e avaliadores podem ser alterados enquanto a banca
               estiver em preparação. Após abrir, a composição e a rubrica ficam

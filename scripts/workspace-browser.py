@@ -53,7 +53,9 @@ class Scenario:
     def route(self, r):
         url = r.request.url
         status = 200
-        if '/api/auth/me' in url:
+        if '/api/concierge/status' in url:
+            body = {'available': False}
+        elif '/api/auth/me' in url:
             status, body = self.identity_status, self.identity
         elif '/api/admin/institutions' in url:
             body = {'institutions': self.catalog}
@@ -227,8 +229,8 @@ class WorkspaceTests(unittest.TestCase):
                     self.assertEqual(set(s.commands[-1]['data']), {'id','summary'})
                 elif role=='evaluator':
                     s.navigate('Avaliações')
-                    p.get_by_label('Banca para avaliar').select_option('e1')
-                    p.get_by_label('Projeto para avaliar').select_option('p1')
+                    p.get_by_role('combobox',name='Banca para avaliar').fill('Banca'); p.get_by_role('option',name='Banca de teste',exact=False).click()
+                    p.get_by_role('combobox',name='Projeto para avaliar').fill('Projeto'); p.get_by_role('option',name='Projeto de teste',exact=False).click()
                     p.get_by_label('Nota para Inovação').select_option('5')
                     p.get_by_role('button', name='Enviar avaliação').click()
                     expect(p.get_by_text('Avaliação registrada.', exact=False)).to_be_visible()
@@ -299,6 +301,37 @@ class WorkspaceTests(unittest.TestCase):
         p.get_by_label('Pesquisar pessoa').fill('zzzz')
         expect(p.get_by_text('Nenhuma pessoa corresponde à pesquisa',exact=True)).to_be_visible()
         s.close()
+
+    def test_project_container_opens_details_and_preserves_keyboard(self):
+        s=Scenario(self.browser,width=1440); p=s.goto('/app/projects')
+        p.get_by_role('cell',name='2026.2',exact=True).click()
+        expect(p.locator('#project-detail')).to_be_visible()
+        expect(p.locator('.project-table tr.selected')).to_have_count(1)
+        p.get_by_role('button',name='Projeto de teste',exact=True).focus()
+        p.keyboard.press('Enter')
+        expect(p.locator('#project-detail')).to_be_visible(); s.close()
+
+    def test_searchable_composition_and_chip_removal(self):
+        s=Scenario(self.browser,role='coordinator',width=390); p=s.goto('/app/events')
+        p.get_by_role('button',name='Nova banca',exact=True).click()
+        search=p.get_by_role('textbox',name='Buscar em Projetos da banca')
+        search.fill('zzzz'); expect(p.get_by_text('Nenhum item corresponde à busca.',exact=True)).to_be_visible()
+        search.fill('Educação'); p.get_by_role('checkbox',name='Projeto de teste',exact=True).check()
+        expect(p.get_by_text('1 selecionados',exact=True)).to_be_visible()
+        p.get_by_role('button',name='Remover Projeto de teste',exact=True).click()
+        expect(p.get_by_role('checkbox',name='Projeto de teste',exact=True)).not_to_be_checked()
+        s.no_overflow(); p.screenshot(path=str(ARTIFACTS/'composition-mobile.png'),full_page=True); s.close()
+
+    def test_combobox_keyboard_and_existing_evaluation_revision(self):
+        s=Scenario(self.browser,role='evaluator',width=1440)
+        s.data['evaluations']=[dict(id='eval',event_id='e1',project_id='p1',evaluator_id=UID,scores={'c1':3},notes='Parecer anterior',average=3,submitted_at='2026-10-25T10:00:00Z')]
+        p=s.goto('/app/evaluations')
+        field=p.get_by_role('combobox',name='Banca para avaliar'); field.fill('Banca'); p.keyboard.press('Enter')
+        field=p.get_by_role('combobox',name='Projeto para avaliar'); field.fill('Projeto'); p.keyboard.press('Enter')
+        expect(p.get_by_label('Nota para Inovação')).to_have_value('3')
+        p.get_by_label('Nota para Inovação').select_option('5'); p.get_by_role('button',name='Enviar avaliação',exact=True).click()
+        self.assertEqual(s.commands[-1]['data']['scores'],{'c1':5})
+        expect(p.get_by_text('Você pode revisá-la',exact=False)).to_be_visible(); s.close()
 
     def test_form_cancel_resets_criterion_defaults(self):
         s=Scenario(self.browser)

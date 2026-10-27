@@ -1,3 +1,4 @@
+import { apiFetch } from "../lib/api";
 import { useEffect, useRef, useState } from "react";
 import type { WorkspaceData } from "./types";
 import { Card, Empty, InputField, score } from "./ui";
@@ -73,7 +74,7 @@ export function ResultsModule({
     setDownloading(true);
     setError("");
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/workspace/${institutionId}/export?type=${type}${type === "results" ? `&event=${result?.event_id ?? ""}` : ""}`,
         { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
       );

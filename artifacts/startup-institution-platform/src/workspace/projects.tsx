@@ -1,3 +1,4 @@
+import { SearchSelect } from "../components/inputs/search-select";
 import { useState, type FormEvent } from "react";
 import type { Command, Project, WorkspaceData } from "./types";
 import { Card, Empty, InputField, SaveButton } from "./ui";
@@ -145,7 +146,7 @@ export function ProjectsModule({
           role="region"
           aria-label="Lista de projetos"
         >
-          <table>
+          <table className="project-table">
             <thead>
               <tr>
                 <th>Projeto</th>
@@ -156,13 +157,40 @@ export function ProjectsModule({
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id}>
+                <tr
+                  key={p.id}
+                  className={selectedId === p.id ? "selected" : ""}
+                  onClick={(event) => {
+                    if (
+                      (event.target as HTMLElement).closest("button, a, input")
+                    )
+                      return;
+                    setSelectedId(p.id);
+                    setEditing(null);
+                    requestAnimationFrame(() =>
+                      document
+                        .getElementById("project-detail")
+                        ?.scrollIntoView({
+                          block: "start",
+                          behavior: "instant",
+                        }),
+                    );
+                  }}
+                >
                   <td>
                     <button
                       className="row-link"
                       onClick={() => {
                         setSelectedId(p.id);
                         setEditing(null);
+                        requestAnimationFrame(() =>
+                          document
+                            .getElementById("project-detail")
+                            ?.scrollIntoView({
+                              block: "start",
+                              behavior: "instant",
+                            }),
+                        );
                       }}
                     >
                       {p.name}
@@ -291,93 +319,102 @@ export function ProjectsModule({
         </Card>
       )}
       {selected && editing === null && (
-        <Card>
-          <div className="section-head">
-            <h2 className="section-title">{selected.name}</h2>
-            {canEdit && (
-              <button
-                className="btn btn-primary"
-                onClick={() => edit(selected)}
+        <section
+          id="project-detail"
+          className="project-detail"
+          aria-label="Detalhes do projeto"
+        >
+          <Card>
+            <div className="section-head">
+              <h2 className="section-title">{selected.name}</h2>
+              {canEdit && (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => edit(selected)}
+                >
+                  {manager ? "Editar projeto" : "Editar descrição"}
+                </button>
+              )}
+            </div>
+            <p style={{ whiteSpace: "pre-wrap" }}>{selected.summary}</p>
+            <p>
+              {selected.category} · {selected.stage} · {selected.year}.
+              {selected.semester}
+            </p>
+            <h3 className="section-title">Integrantes e orientadores</h3>
+            {data.participants
+              .filter((p) => p.project_id === selected.id)
+              .map((p) => (
+                <div className="workspace-row" key={`${p.user_id}:${p.kind}`}>
+                  <span>
+                    {name(p.user_id)} ·{" "}
+                    {p.kind === "mentor" ? "Orientador" : "Aluno"}
+                  </span>
+                  {manager && (
+                    <button
+                      className="btn btn-ghost"
+                      disabled={busy}
+                      onClick={() =>
+                        command("project.team", {
+                          id: selected.id,
+                          user_id: p.user_id,
+                          kind: p.kind,
+                          remove: true,
+                        })
+                      }
+                    >
+                      Remover
+                    </button>
+                  )}
+                </div>
+              ))}
+            {manager && (
+              <form
+                className="workspace-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (personId)
+                    void command("project.team", {
+                      id: selected.id,
+                      user_id: personId,
+                      kind,
+                    });
+                }}
               >
-                {manager ? "Editar projeto" : "Editar descrição"}
-              </button>
-            )}
-          </div>
-          <p style={{ whiteSpace: "pre-wrap" }}>{selected.summary}</p>
-          <p>
-            {selected.category} · {selected.stage} · {selected.year}.
-            {selected.semester}
-          </p>
-          <h3 className="section-title">Integrantes e orientadores</h3>
-          {data.participants
-            .filter((p) => p.project_id === selected.id)
-            .map((p) => (
-              <div className="workspace-row" key={`${p.user_id}:${p.kind}`}>
-                <span>
-                  {name(p.user_id)} ·{" "}
-                  {p.kind === "mentor" ? "Orientador" : "Aluno"}
-                </span>
-                {manager && (
-                  <button
-                    className="btn btn-ghost"
-                    disabled={busy}
-                    onClick={() =>
-                      command("project.team", {
-                        id: selected.id,
-                        user_id: p.user_id,
-                        kind: p.kind,
-                        remove: true,
-                      })
-                    }
+                <InputField label="Tipo de participante">
+                  <select
+                    value={kind}
+                    onChange={(e) => {
+                      setKind(e.target.value as "student" | "mentor");
+                      setPersonId("");
+                    }}
                   >
-                    Remover
-                  </button>
-                )}
-              </div>
-            ))}
-          {manager && (
-            <form
-              className="workspace-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (personId)
-                  void command("project.team", {
-                    id: selected.id,
-                    user_id: personId,
-                    kind,
-                  });
-              }}
-            >
-              <InputField label="Tipo de participante">
-                <select
-                  value={kind}
-                  onChange={(e) => {
-                    setKind(e.target.value as "student" | "mentor");
-                    setPersonId("");
-                  }}
-                >
-                  <option value="student">Aluno</option>
-                  <option value="mentor">Orientador</option>
-                </select>
-              </InputField>
-              <InputField label="Pessoa para vincular">
-                <select
-                  required
-                  value={personId}
-                  onChange={(e) => setPersonId(e.target.value)}
-                >
-                  <option value="">Selecione um vínculo ativo</option>
-                  {eligible.map((m) => (
-                    <option key={m.user_id} value={m.user_id}>
-                      {name(m.user_id)}
-                    </option>
-                  ))}
-                </select>
-              </InputField>
-              <SaveButton busy={busy}>Adicionar à equipe</SaveButton>
-            </form>
-          )}
-        </Card>
+                    <option value="student">Aluno</option>
+                    <option value="mentor">Orientador</option>
+                  </select>
+                </InputField>
+                <InputField label="Pessoa para vincular">
+                  <SearchSelect
+                    label="Pessoa para vincular"
+                    required
+                    value={personId}
+                    onChange={setPersonId}
+                    disabled={busy}
+                    options={eligible.map((member) => ({
+                      value: member.user_id,
+                      label: name(member.user_id),
+                      description:
+                        kind === "mentor"
+                          ? "Orientador · vínculo ativo"
+                          : "Aluno · vínculo ativo",
+                    }))}
+                  />
+                </InputField>
+                <SaveButton busy={busy}>Adicionar à equipe</SaveButton>
+              </form>
+            )}
+          </Card>
+        </section>
       )}
     </>
   );

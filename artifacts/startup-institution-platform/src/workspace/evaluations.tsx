@@ -1,3 +1,4 @@
+import { SearchSelect } from "../components/inputs/search-select";
 import { useState, type FormEvent } from "react";
 import type { Command, WorkspaceData } from "./types";
 import { Card, Empty, InputField, SaveButton, score, dateTime } from "./ui";
@@ -70,50 +71,49 @@ export function EvaluationsModule({
         ) : (
           <>
             <InputField label="Banca para avaliar">
-              <select
+              <SearchSelect
+                label="Banca para avaliar"
                 value={eventId}
-                onChange={(e) => {
-                  setEventId(e.target.value);
+                disabled={busy}
+                onChange={(id) => {
+                  setEventId(id);
                   setProjectId("");
                   setScores({});
                   setNotes("");
                   setReceipt("");
                 }}
-              >
-                <option value="">Selecione</option>
-                {assigned.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.name} ·{" "}
-                    {e.status === "open"
-                      ? "Aberta"
-                      : e.status === "draft"
+                options={assigned.map((event) => ({
+                  value: event.id,
+                  label: event.name,
+                  description:
+                    event.status === "open"
+                      ? "Aberta para avaliações"
+                      : event.status === "draft"
                         ? "Em preparação"
-                        : "Encerrada"}
-                  </option>
-                ))}
-              </select>
+                        : "Encerrada · consulta",
+                }))}
+              />
             </InputField>
             {event && (
               <InputField label="Projeto para avaliar">
-                <select
+                <SearchSelect
+                  label="Projeto para avaliar"
                   value={projectId}
-                  onChange={(e) => chooseProject(e.target.value)}
-                >
-                  <option value="">Selecione</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                      {data.evaluations.some(
-                        (e) =>
-                          e.event_id === eventId &&
-                          e.project_id === p.id &&
-                          e.evaluator_id === userId,
-                      )
-                        ? " · Avaliado"
-                        : ""}
-                    </option>
-                  ))}
-                </select>
+                  onChange={chooseProject}
+                  disabled={busy}
+                  options={projects.map((project) => ({
+                    value: project.id,
+                    label: project.name,
+                    description: data.evaluations.some(
+                      (e) =>
+                        e.event_id === eventId &&
+                        e.project_id === project.id &&
+                        e.evaluator_id === userId,
+                    )
+                      ? "Avaliado · revisão disponível enquanto a banca estiver aberta"
+                      : "Aguardando sua avaliação",
+                  }))}
+                />
               </InputField>
             )}
             {event &&

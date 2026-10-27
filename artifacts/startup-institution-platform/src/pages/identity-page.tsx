@@ -1,3 +1,4 @@
+import { apiFetch } from "../lib/api";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import type { Session } from "@supabase/supabase-js";
@@ -66,7 +67,7 @@ export function IdentityPage({
     const controller = new AbortController();
     setIdentity(null);
     setError("");
-    void fetch("/api/auth/me", {
+    void apiFetch("/api/auth/me", {
       headers: { Authorization: `Bearer ${session.access_token}` },
       signal: controller.signal,
       cache: "no-store",

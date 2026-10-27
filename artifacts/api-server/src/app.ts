@@ -1,5 +1,5 @@
 import express, { type Express } from "express";
-import cors from "cors";
+import { originPolicy } from "./middlewares/origin";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -30,7 +30,7 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(originPolicy());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

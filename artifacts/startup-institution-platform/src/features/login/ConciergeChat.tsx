@@ -1,3 +1,4 @@
+import { apiFetch } from "../../lib/api";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowUp, Check, MessageCircle, Sparkles, X } from "lucide-react";
 import { Button } from "../../components/ui/button";
@@ -62,7 +63,7 @@ export function ConciergeChat({
   useEffect(() => {
     if (!open) return;
     const controller = new AbortController();
-    void fetch("/api/concierge/status", {
+    void apiFetch("/api/concierge/status", {
       signal: controller.signal,
       cache: "no-store",
     })
@@ -95,7 +96,7 @@ export function ConciergeChat({
     const controller = new AbortController();
     abort.current = controller;
     try {
-      const r = await fetch("/api/concierge", {
+      const r = await apiFetch("/api/concierge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history }),
