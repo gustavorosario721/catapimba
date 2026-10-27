@@ -47,6 +47,7 @@ export function score(value: number | null) {
       });
 }
 export const auditNames: Record<string, string> = {
+  "testdata.podium_lab.seed": "Laboratório de teste do pódio criado",
   "institution.create": "Instituição cadastrada",
   "institution.active": "Instituição ativada",
   "institution.suspended": "Instituição suspensa",

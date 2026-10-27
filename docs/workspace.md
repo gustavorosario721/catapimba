@@ -11,7 +11,7 @@ A área autenticada está em `/conta` e `/app/*`. Os fluxos de demonstração fo
 5. Cadastre critérios, pesos e cinco descritores. Prepare uma banca, selecione projetos e avaliadores e abra as avaliações.
 6. Cada avaliador atribuído envia notas inteiras de 1 a 5. Pode revisar enquanto a banca estiver aberta. O envio repetido atualiza a avaliação existente e não duplica seu peso.
 7. Encerre quando todas as combinações projeto × avaliador tiverem avaliação. Depois publique os resultados. Publicar e ocultar são ações distintas do encerramento.
-8. Consulte relatórios CSV, classificação, pódio com controles de animação e som, e auditoria.
+8. Consulte relatórios CSV, classificação, [pódio individual com suspense e música opcional](podium.md), e auditoria. A cerimônia exige banca encerrada, completa e publicada; membros ativos da instituição podem assistir, mesmo sem integrar os projetos premiados.
 
 No celular, use **Abrir menu** no cabeçalho para ver todos os módulos permitidos. O menu aceita teclado e Escape. Tabelas podem ser percorridas horizontalmente dentro da região identificada, também acessível pelo teclado.
 
@@ -78,7 +78,7 @@ O visual é compartilhado entre páginas públicas, autenticação e módulos, c
 
 Esta entrega é um núcleo funcional para homologação. Ainda exige teste manual com contas reais de cada perfil antes de uso institucional. Não inclui anexos, notificações por e-mail, convites por SMTP, relatórios PDF, recuperação de banca encerrada, equipe reutilizável entre projetos ou integração acadêmica externa.
 
-A leitura do contexto institucional retorna os recursos autorizados em um único JSON; antes de grandes volumes, implementar paginação e limites de exportação. Monitorar cotas dos planos gratuitos. Não foi contratado serviço pago. O preview autenticado está na branch `feat/identity-foundation`; produção depende de integração das branches, variáveis e URLs de OAuth correspondentes.
+A leitura do contexto institucional retorna os recursos autorizados em um único JSON; antes de grandes volumes, implementar paginação e limites de exportação. Monitorar cotas dos planos gratuitos. Não foi contratado serviço pago. A produção usa a branch `main`; recursos em branches de trabalho dependem de revisão e autorização para publicação. O histórico das implantações está em [deployment.md](deployment.md).
 
 LGPD ainda requer decisões institucionais sobre finalidade, base legal, retenção/exclusão, política de privacidade, responsáveis pelo tratamento e atendimento a titulares. Controle técnico de acesso não equivale a conformidade jurídica completa. Backup, recuperação, limites de requisições e operação em escala precisam de homologação própria.
 
