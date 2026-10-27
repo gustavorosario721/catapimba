@@ -64,3 +64,5 @@ Papéis pertencem ao vínculo institucional. Ser superadministrador não concede
 Meta de custo: R$ 0 para desenvolvimento e demonstração. Nenhum plano pago foi contratado. O Render Free hiberna após inatividade e tem cotas compartilhadas de uso. O frontend apresenta espera e erros de conexão sem repetir automaticamente comandos de escrita. Vercel e Supabase também têm limites de uso. A IA generativa continua desativada; o guia de acesso tem respostas prontas identificadas como tal.
 
 O merge da branch `feat/login-accessibility` em `main` foi solicitado e realizado. Publicações em produção continuam sendo ações separadas; um merge não comprova que o site já recebeu o código novo.
+
+O PR #3 foi integrado à `main` e publicado com autorização em 27/10/2026. O endereço principal é https://catapimba-mu.vercel.app, com API em https://catapimba-api.onrender.com. Consulte o registro em [deployment.md](docs/deployment.md), inclusive os ajustes restantes de Branch e Health Check no painel Render.

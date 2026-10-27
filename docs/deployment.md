@@ -56,3 +56,19 @@ Esses testes não equivalem a login Google real no novo endereço nem a teste em
 - Produção `https://catapimba-mu.vercel.app` continua no deployment anterior. A atualização da URL da API no ambiente de produção e a publicação final dependem de autorização explícita, conforme a instrução do projeto.
 
 A branch de acessibilidade foi integrada à `main` por fast-forward, sem reescrever histórico. As novas correções e a implantação separada estão na branch `feat/render-api-and-workspace-ui`, para revisão antes da integração/publicação final.
+
+## Publicação autorizada do PR #3 — 27/10/2026
+
+O PR #3 foi integrado à `main` no commit `edfabee275b276ebefe39cd48d40aa83f7bf666c`, após autorização explícita. O frontend foi publicado como produção no deployment Vercel `dpl_CcsTfLpMjU2S9k74YnWybfT3eapb`, estado **READY**, em `https://catapimba-mu.vercel.app`. `VITE_API_URL` de Production foi configurado como `https://catapimba-api.onrender.com`.
+
+A API Render continua **live** no commit `59fbaf1`; não há diferenças de código de aplicação entre esse commit e a main publicada (somente documentação e metadados de merge). Não houve necessidade de repetir o deploy do backend para essa publicação.
+
+Verificações posteriores: health check Render 200; preflight da origem de produção 204; home, login e rotas SPA 200; JavaScript 200; asset inexistente 404. Não foram encontrados logs de nível error no Render na consulta dessa publicação. A tentativa de navegação remota no Chromium foi limitada pela ausência de confiança do navegador na CA do proxy do ambiente (`ERR_CERT_AUTHORITY_INVALID`); as verificações HTTP mantiveram a validação TLS e passaram. Não foi efetuado login Google real nem verificação autenticada remota em nome do usuário.
+
+Ajustes que ainda precisam do Dashboard Render, pois o conector disponível não oferece atualização dessas propriedades:
+
+1. Em `catapimba-api` → Settings → Build & Deploy, alterar Branch de `feat/render-api-and-workspace-ui` para `main`.
+2. Em Settings → Health Checks, configurar Health Check Path como `/api/healthz`. O serviço atualmente usa o health check TCP padrão e está atendendo normalmente.
+3. Manter Auto-Deploy em Off para continuar com publicação manual. Depois de alterar a branch, usar Manual Deploy → Deploy latest commit para consolidar o backend na main; o código de aplicação atual já é equivalente.
+
+Não é necessário editar código, recriar banco ou executar migrations manualmente para concluir esses ajustes. O PR #3 está merged e não precisa de outro merge pelo usuário.
