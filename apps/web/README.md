@@ -22,3 +22,5 @@ resultados vêm exclusivamente da API, sujeitos às permissões do servidor.
 
 Consulte o [README da raiz](../../README.md) e o [roteiro de uso](../../docs/workspace.md)
 para execução integrada, testes e limites conhecidos.
+
+Em hospedagem, a API é externa: configure `VITE_API_URL` com a origem HTTPS do Render. Os módulos ficam em `src/features/workspace`; os seletores compartilhados estão em `src/components/inputs`.

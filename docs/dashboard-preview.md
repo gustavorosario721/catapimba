@@ -1,3 +1,5 @@
+> Registro histórico do primeiro preview. O painel foi integrado à main; consulte [deployment.md](deployment.md) para a etapa atual.
+
 # Preview do painel institucional
 
 O painel em `feat/login-accessibility` usa o contexto real já retornado pela API. Não contém instituições, projetos ou contagens de exemplo.

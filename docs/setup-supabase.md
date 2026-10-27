@@ -70,14 +70,9 @@ o superadministrador nomeia administradores institucionais.
 
 ## Variáveis e execução local
 
-A branch `feat/identity-foundation` tem quatro variáveis configuradas apenas para
-seus previews na Vercel: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`,
-`SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY`. A chave é publicável, não administrativa.
+No frontend Vercel, configure `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` e `VITE_API_URL`. No backend Render, configure `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `FRONTEND_ORIGINS`. A chave Supabase utilizada é publicável, não administrativa.
 
-Os exemplos ficam nas pastas das aplicações. O Vite carrega o `.env.local` do
-frontend. Para a API, use Node 24 com `--env-file=.env.local` na pasta api-server,
-mais `PORT=3001`, após compilar. Nenhuma conexão privilegiada Postgres é necessária
-para executar `/api/auth/me`.
+Os exemplos ficam em `apps/web/.env.example` e `apps/api/.env.example`. O Vite lê o `.env.local` do frontend. Para a API local, compile com `pnpm run build:api` e execute `PORT=3001 node --env-file=apps/api/.env.local apps/api/dist/index.mjs` na raiz. Nenhuma conexão privilegiada Postgres é necessária para `/api/auth/me`.
 
 Não usar `DATABASE_URL` ou a service-role para simular acesso de um usuário.
 Não executar `drizzle-kit push` em paralelo com as migrations SQL desta fundação.
