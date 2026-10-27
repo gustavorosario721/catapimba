@@ -1,7 +1,25 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Redirect, useLocation } from "wouter";
 import { PublicHome, AccessInfo, RecoveryInfo } from "./pages/public-pages";
-import { IdentityPage } from "./pages/identity-page";
+import { LoadingState } from "./components/app-ui";
+const IdentityPage = lazy(() =>
+  import("./pages/identity-page").then((module) => ({
+    default: module.IdentityPage,
+  })),
+);
+function IdentityRoute({ mode }: { mode: "login" | "callback" | "account" }) {
+  return (
+    <Suspense
+      fallback={
+        <main id="main-content">
+          <LoadingState>Carregando acesso…</LoadingState>
+        </main>
+      }
+    >
+      <IdentityPage mode={mode} />
+    </Suspense>
+  );
+}
 import NotFound from "./pages/not-found";
 
 // Preserve bookmarked addresses without retaining any simulated application.
@@ -31,10 +49,10 @@ export default function App() {
     window.scrollTo({ top: 0 });
   }, [path]);
   if (path === "/") return <PublicHome />;
-  if (path === "/login") return <IdentityPage mode="login" />;
-  if (path === "/auth/callback") return <IdentityPage mode="callback" />;
+  if (path === "/login") return <IdentityRoute mode="login" />;
+  if (path === "/auth/callback") return <IdentityRoute mode="callback" />;
   if (path === "/conta" || path.startsWith("/app/"))
-    return <IdentityPage mode="account" />;
+    return <IdentityRoute mode="account" />;
   if (path === "/app") return <Redirect to="/conta" />;
   if (path === "/solicitar-acesso") return <AccessInfo />;
   if (path === "/recuperar-senha") return <RecoveryInfo />;

@@ -58,3 +58,7 @@ Thumbs.db
 # Local credentials (keep sanitized examples versionable)
 .env.*
 !.env.example
+
+# Python browser-test caches
+__pycache__/
+*.py[cod]

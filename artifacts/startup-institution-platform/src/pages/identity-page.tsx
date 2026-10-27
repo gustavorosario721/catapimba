@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import type { Session } from "@supabase/supabase-js";
 import { isGoogleEnabled, supabase } from "../lib/supabase";
 import { WorkspaceApp } from "../workspace/app";
 import type { Identity } from "../workspace/types";
-import { Logo, LoadingState } from "../components/app-ui";
-import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
+import LoginPage from "./login";
 
 export function IdentityPage({
   mode,
@@ -160,85 +159,16 @@ export function IdentityPage({
     );
   }
   return (
-    <div className="auth-page">
-      <header className="public-nav">
-        <Link href="/">
-          <Logo />
-        </Link>
-        <Link href="/" className="back-link">
-          <ArrowLeft size={16} aria-hidden="true" />
-          Voltar ao início
-        </Link>
-      </header>
-      <main id="main-content" className="auth-card">
-        <span className="eyebrow">ACESSO À PLATAFORMA</span>
-        <span className="auth-symbol" aria-hidden="true">
-          <ShieldCheck size={28} />
-        </span>
-        <h1 tabIndex={-1}>
-          {mode === "account"
-            ? "Minha conta"
-            : mode === "callback"
-              ? "Concluindo seu acesso"
-              : "Entrar na plataforma"}
-        </h1>
-        {error && (
-          <p role="alert" className="notice error">
-            {error}
-          </p>
-        )}
-        {!supabase ? (
-          <p>O acesso à plataforma ainda está sendo configurado.</p>
-        ) : loading ? (
-          <LoadingState>Verificando sua sessão…</LoadingState>
-        ) : mode === "account" && session ? (
-          <>
-            {!identity && !error && (
-              <LoadingState>Consultando seus vínculos…</LoadingState>
-            )}
-            {error && (
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => setAttempt((v) => v + 1)}
-              >
-                Tentar novamente
-              </button>
-            )}
-            <button
-              className="btn btn-primary"
-              disabled={busy}
-              onClick={signOut}
-            >
-              Sair da conta
-            </button>
-          </>
-        ) : (
-          <>
-            <p>
-              Entre com sua conta Google. O acesso às instituições depende de um
-              vínculo aprovado.
-            </p>
-            <button
-              className="btn btn-primary"
-              disabled={busy}
-              onClick={signIn}
-            >
-              {busy ? (
-                "Redirecionando…"
-              ) : (
-                <>
-                  Entrar com Google <ArrowRight size={18} aria-hidden="true" />
-                </>
-              )}
-            </button>
-          </>
-        )}
-        <div className="auth-links">
-          <Link href="/solicitar-acesso">Como solicitar acesso</Link>
-          <Link href="/recuperar-senha">Preciso de ajuda</Link>
-        </div>
-      </main>
-    </div>
+    <LoginPage
+      mode={mode}
+      hasSession={!!session}
+      configured={!!supabase}
+      loading={loading}
+      error={error}
+      busy={busy}
+      signIn={signIn}
+      signOut={signOut}
+      retry={() => setAttempt((v) => v + 1)}
+    />
   );
 }

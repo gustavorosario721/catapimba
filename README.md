@@ -57,3 +57,5 @@ Orçamento: R$ 0 durante desenvolvimento e demonstração. Nenhum plano pago foi
 O refinamento visual usa componentes compartilhados, tipografia de sistema e uma paleta única. Solicitação de acesso é feita somente na conta autenticada; recuperação de acesso é tratada pelo Google, sem senha própria ou envio de e-mail simulado.
 
 O [relatório de refinamento](docs/refinement-validation.md) registra o que mudou, testes locais e limites. O código foi consolidado na `main`; a publicação manual desta versão foi autorizada. A versão do commit `89430e0` foi implantada manualmente em produção em 25/10/2026: https://catapimba-mu.vercel.app. Novos deploys continuam sujeitos à autorização.
+
+A evolução local do [login dividido com acessibilidade e pódio 3D](docs/login-accessibility.md) preserva a entrada Google. O guia textual funciona sem IA; a geração opcional aguarda provedor/orçamento e está desativada por padrão. Esta evolução é disponibilizada para revisão em um preview da branch `feat/login-accessibility`; a produção não foi alterada.

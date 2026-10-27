@@ -7,6 +7,8 @@ import { identityRouter } from "./routes/identity";
 import { platformRouter } from "./routes/platform";
 import { workspaceRouter } from "./routes/workspace";
 
+import { conciergeRouter } from "./routes/concierge";
+
 const app: Express = express();
 
 app.use(
@@ -36,6 +38,7 @@ app.use("/api", router);
 app.use("/api", identityRouter);
 app.use("/api", platformRouter);
 app.use("/api", workspaceRouter);
+app.use("/api", conciergeRouter);
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "Endpoint não encontrado" });
 });
