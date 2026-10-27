@@ -1,18 +1,15 @@
-# Login dividido, pódio 3D e acessibilidade
+# Login simplificado e acessibilidade
 
-Implementação local em 27/10/2026. Esta revisão é publicada apenas como preview na branch `feat/login-accessibility`, a pedido do responsável. A produção permanece na versão anterior.
+Login Google com ajuda por texto, temas e preferências de acessibilidade. O layout de uma coluna substitui a tela dividida e o painel 3D, por solicitação do responsável em 27/10/2026.
 
 ## Componentes
 
-- `apps/web/src/pages/login.tsx`: apresentação do login em tela dividida. Usa o estado e as ações reais de `identity-page.tsx`; não implementa outra autenticação.
-- `src/features/login/InteractivePodium.tsx`: cena Three.js + `@react-three/fiber`, com iluminação por tema e reação ao ponteiro, foco do botão de entrada e digitação no guia. Sem campos de senha fictícios. Os blocos decorativos não representam resultados ou projetos reais.
-- `src/features/accessibility/AccessibilityPanel.tsx`: painel com tema claro/escuro/sistema, modo tranquilo, texto ampliado, ajustes de cores e restauração de preferências.
-- `AccessibilityProvider.tsx`: preferências validadas no localStorage, tema do dispositivo e movimento reduzido. Não guarda dados de conta.
-- `src/features/login/ConciergeChat.tsx`: guia textual com respostas prontas, identificado como guia. A opção de IA só aparece quando a API declara configuração disponível.
-- `src/components/ui`: controles shadcn/ui sobre Radix para Button, Label, Switch e Tooltip, além de Input. Foram restaurados apenas os necessários. Não há formulário de senha/cadastro próprio nem necessidade de React Hook Form neste fluxo Google.
-- `src/features/login/login.css`: tokens compartilhados com Tailwind, temas e estilos responsivos. Framer Motion anima a entrada e a transição de fundo; movimento reduzido ou modo tranquilo eliminam as animações.
+- `apps/web/src/pages/login.tsx`: login em uma coluna central, com estado e ações reais de `identity-page.tsx`. Entrada Google, tratamento de sessão, erro e callback preservados.
+- `src/features/accessibility`: temas, filtros de cor, modo tranquilo, texto ampliado e atalhos de teclado.
+- `src/features/login/ConciergeChat.tsx`: guia de acesso por texto recolhível. Não há atividade ligada a uma cena decorativa.
+- `src/features/login/login.css`: estilos do login, guia e preferências globais de acessibilidade.
 
-Caminhos `src/*` acima são relativos ao frontend principal.
+A cena 3D e sua alternativa estática foram removidas por solicitação do usuário. O frontend não depende mais de Three.js, React Three Fiber ou seus tipos. O pódio de resultados em `features/workspace/results.tsx` permanece como estava; a cerimônia animada aguarda autorização futura.
 
 ## Acessibilidade e desempenho
 
@@ -22,9 +19,8 @@ Caminhos `src/*` acima são relativos ao frontend principal.
 - Alt+Shift+A abre as opções; Alt+Shift+L leva ao botão de entrada, quando disponível. A disponibilidade dos atalhos também depende do navegador e sistema operacional.
 - Texto ampliado e espaçamentos maiores no modo tranquilo, sem reduzir intencionalmente o contraste do texto.
 - Os ajustes para protanopia, deuteranopia, tritanopia e acromatopsia são opcionais e restauráveis. São realces visuais aproximados, não tratamentos ou correções clinicamente calibradas. Não substituem texto, ícones ou contraste.
-- Three.js é carregado separadamente. Movimento reduzido e modo tranquilo evitam até o download desse módulo. No celular, o visual estático é o padrão, com ativação 3D opcional.
-- WebGL usa renderização sob demanda, DPR limitado, sem recursos/fontes 3D remotos nem animação contínua. Há visual estático para indisponibilidade de WebGL/carregamento.
-- A autenticação e o painel foram separados do bundle público para evitar que a página inicial carregue o fluxo 3D/SDK de login.
+- O login não carrega WebGL, objetos 3D ou imagens decorativas. O layout central funciona em telas pequenas e grandes, com e sem preferência por movimento reduzido.
+- A autenticação e o painel foram separados do bundle público para evitar que a página inicial carregue o SDK de login.
 
 Não se trata de certificação WCAG nem comprovação de compatibilidade com todos os leitores de tela. Safari/iOS e tecnologias assistivas reais continuam exigindo homologação.
 
@@ -58,8 +54,14 @@ Não há recuperação de conta via conversa, envio de e-mail ou concessão de a
 ## Verificação
 
 - `pnpm run build:web` e `pnpm run build:api`: tipos e build de cada aplicação.
-- `pnpm test:routing`: 23 testes HTTP, sendo 17 anteriores e 6 novos do concierge. Testam configuração desativada, origem, validação, resposta real do gerador injetado, erro sem detalhes privados e limite de tentativas. Não chamam IA real.
-- `python3 scripts/login-browser.py`: temas/persistência, atalhos, preferências, modo tranquilo, guia, dispositivos pequenos, download evitado com movimento reduzido e cena WebGL em Chromium com renderização de software. Não mede desempenho de GPU em aparelhos reais.
-- `python3 scripts/workspace-browser.py`: regressão dos 23 cenários existentes, incluindo seis perfis, falhas de identidade e permissões, formulários e navegação.
+- `pnpm test:routing`: 27 testes HTTP, incluindo transporte, CORS e concierge. Testam configuração desativada, origem, validação, resposta real do gerador injetado, erro sem detalhes privados e limite de tentativas. Não chamam IA real.
+- `python3 scripts/login-browser.py`: temas/persistência, atalhos, preferências, modo tranquilo, guia, dispositivos pequenos, ausência de cena WebGL em ambos os modos de movimento, no celular e desktop.
+- `python3 scripts/workspace-browser.py`: regressão dos 26 cenários existentes, incluindo seis perfis, falhas de identidade e permissões, formulários e navegação.
 
 Os testes de navegador usam fixtures de identidade e API, sem credenciais reais ou escrita no banco. Capturas ficam em `/tmp/catapimba-login`. Nenhuma migration, política RLS, regra de negócio institucional ou contrato de sessão foi alterado.
+
+## Simplificação do login — 27/10/2026
+
+Layout central de uma coluna, texto de entrada mais curto, retirada do painel promocional e da cena 3D. Foram removidos também os estilos, callbacks de atividade e pacotes exclusivos dessa cena. Autenticação, temas, preferências, ajuda e controles de acessibilidade continuam disponíveis. O pódio de resultados não foi alterado. A visibilidade dos resultados publicados continua institucional, para vínculos ativos, conforme a regra existente.
+
+Validação desta simplificação: instalação com lockfile congelado e política de idade mínima passou; build e tipos do frontend passaram; quatro testes do login e seis testes de regressão de páginas públicas/identidade/perfis passaram, com fixtures locais. Nenhuma versão de pacote foi adicionada: dezoito pacotes exclusivos do fluxo 3D saíram do lockfile. O arquivo JavaScript separado de aproximadamente 931 kB da cena 3D deixou de ser gerado. Não foram repetidos testes SQL ou de API, pois não houve alterações no backend, banco ou autorização.

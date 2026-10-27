@@ -43,13 +43,7 @@ function guidance(text: string) {
   if (/plataforma|projeto|avali|banca/.test(q)) return topics[3].reply;
   return "Posso orientar sobre entrada com Google, solicitação de vínculo e recuperação da conta Google. Use uma das opções acima. Este guia não consulta contas, não envia pedidos e não altera dados.";
 }
-export function ConciergeChat({
-  onActivity,
-  onFocusLogin,
-}: {
-  onActivity: () => void;
-  onFocusLogin: () => void;
-}) {
+export function ConciergeChat({ onFocusLogin }: { onFocusLogin: () => void }) {
   const [open, setOpen] = useState(false),
     [text, setText] = useState(""),
     [messages, setMessages] = useState<Message[]>([]),
@@ -83,7 +77,6 @@ export function ConciergeChat({
     const history = [...messages, message].slice(-10);
     setText("");
     setError("");
-    onActivity();
     if (!useAI) {
       setMessages([
         ...history,
@@ -214,7 +207,6 @@ export function ConciergeChat({
             value={text}
             onChange={(e) => {
               setText(e.target.value);
-              onActivity();
             }}
             disabled={busy}
           />
