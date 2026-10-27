@@ -14,10 +14,10 @@
   ],
   "references": [
     {
-      "path": "../../lib/db"
+      "path": "../../packages/db"
     },
     {
-      "path": "../../lib/api-zod"
+      "path": "../../packages/api-zod"
     }
   ]
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { EmptyState } from "../components/app-ui";
-export { Card, PageHead, Stat, Status } from "../components/app-ui";
+import { EmptyState } from "../../components/app-ui";
+export { Card, PageHead, Stat, Status } from "../../components/app-ui";
 
 export function InputField({
   label,

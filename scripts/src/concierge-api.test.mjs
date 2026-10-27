@@ -1,8 +1,8 @@
 import { createServer } from "node:http";
 import assert from "node:assert/strict";
 import { before, after, test } from "node:test";
-import express from "../../artifacts/api-server/node_modules/express/index.js";
-import { createConciergeRouter } from "../../artifacts/api-server/src/routes/concierge.ts";
+import express from "../../apps/api/node_modules/express/index.js";
+import { createConciergeRouter } from "../../apps/api/src/routes/concierge.ts";
 let origin,
   calls = 0,
   fail = false;

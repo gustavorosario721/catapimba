@@ -1,4 +1,4 @@
-import { apiFetch } from "../lib/api";
+import { apiFetch } from "../../lib/api";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
@@ -19,8 +19,8 @@ import {
   LayoutDashboard,
   UserRound,
 } from "lucide-react";
-import { Logo, LoadingState } from "../components/app-ui";
-import { PlatformPanel } from "../pages/platform-panel";
+import { Logo, LoadingState } from "../../components/app-ui";
+import { PlatformPanel } from "../../pages/platform-panel";
 import { AccessRequest, MembersModule } from "./access";
 import { ProjectsModule } from "./projects";
 import { CriteriaModule } from "./criteria";

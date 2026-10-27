@@ -1,4 +1,4 @@
-import { apiFetch } from "../lib/api";
+import { apiFetch } from "../../lib/api";
 import { useEffect, useRef, useState } from "react";
 import type { WorkspaceData } from "./types";
 import { Card, Empty, InputField, score } from "./ui";

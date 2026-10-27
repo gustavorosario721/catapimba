@@ -1,7 +1,7 @@
-import { MultiChoice } from "../components/inputs/search-select";
+import { MultiChoice } from "../../components/inputs/search-select";
 import { useState, type FormEvent } from "react";
 import type { Command, Event, WorkspaceData } from "./types";
-import { ConfirmDialog } from "../components/app-ui";
+import { ConfirmDialog } from "../../components/app-ui";
 import { eventStatuses } from "./types";
 import { Card, Empty, InputField, SaveButton, dateTime } from "./ui";
 

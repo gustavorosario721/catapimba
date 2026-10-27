@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import assert from 'node:assert/strict';
 import { before, after, test } from 'node:test';
-import app from '../../api/index.mjs';
+import app from '../../apps/api/dist/app.mjs';
 
 const userId = '10000000-0000-0000-0000-000000000011';
 const institution = { id: '20000000-0000-0000-0000-000000000011', name: 'Teste', status: 'active' };

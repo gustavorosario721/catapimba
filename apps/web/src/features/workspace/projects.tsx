@@ -1,4 +1,4 @@
-import { SearchSelect } from "../components/inputs/search-select";
+import { SearchSelect } from "../../components/inputs/search-select";
 import { useState, type FormEvent } from "react";
 import type { Command, Project, WorkspaceData } from "./types";
 import { Card, Empty, InputField, SaveButton } from "./ui";

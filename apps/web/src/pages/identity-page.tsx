@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import type { Session } from "@supabase/supabase-js";
 import { isGoogleEnabled, supabase } from "../lib/supabase";
-import { WorkspaceApp } from "../workspace/app";
-import type { Identity } from "../workspace/types";
+import { WorkspaceApp } from "../features/workspace/app";
+import type { Identity } from "../features/workspace/types";
 import LoginPage from "./login";
 
 export function IdentityPage({
