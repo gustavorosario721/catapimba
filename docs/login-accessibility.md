@@ -4,7 +4,7 @@ Implementação local em 27/10/2026. Esta revisão é publicada apenas como prev
 
 ## Componentes
 
-- `artifacts/startup-institution-platform/src/pages/login.tsx`: apresentação do login em tela dividida. Usa o estado e as ações reais de `identity-page.tsx`; não implementa outra autenticação.
+- `apps/web/src/pages/login.tsx`: apresentação do login em tela dividida. Usa o estado e as ações reais de `identity-page.tsx`; não implementa outra autenticação.
 - `src/features/login/InteractivePodium.tsx`: cena Three.js + `@react-three/fiber`, com iluminação por tema e reação ao ponteiro, foco do botão de entrada e digitação no guia. Sem campos de senha fictícios. Os blocos decorativos não representam resultados ou projetos reais.
 - `src/features/accessibility/AccessibilityPanel.tsx`: painel com tema claro/escuro/sistema, modo tranquilo, texto ampliado, ajustes de cores e restauração de preferências.
 - `AccessibilityProvider.tsx`: preferências validadas no localStorage, tema do dispositivo e movimento reduzido. Não guarda dados de conta.
@@ -47,7 +47,7 @@ AI_GATEWAY_API_KEY=
 
 1. Escolher um modelo de texto existente no catálogo atual do AI Gateway e confirmar acesso, preços e limites. O catálogo foi consultado nesta rodada; nenhum modelo foi escolhido automaticamente.
 2. Configurar orçamento rígido no serviço/provedor antes de habilitar uso público. Não presumir que cota gratuita seja ilimitada ou que renovará.
-3. Definir `CONCIERGE_ALLOWED_ORIGIN` como a origem exata da aplicação (sem caminho), `CONCIERGE_MODEL` como o identificador real e as credenciais somente no backend. Na Vercel pode ser usado OIDC; localmente, a chave Gateway. Nunca usar `VITE_*` para credenciais de IA.
+3. Definir `CONCIERGE_ALLOWED_ORIGIN` como a origem exata da aplicação (sem caminho), `CONCIERGE_MODEL` como o identificador real e as credenciais somente no backend. No Render é necessária uma credencial própria do provedor; o OIDC da Vercel não está disponível nesse backend. Nunca usar `VITE_*` para credenciais de IA.
 4. Revisar retenção de conversas e finalidade/consentimento aplicáveis. A UI avisa para não enviar senhas/documentos/dados pessoais e a opção de geração é voluntária.
 5. Só então habilitar a flag e testar uma requisição real autorizada. Confirmar consumo e resposta antes de anunciar a geração como disponível.
 
@@ -57,7 +57,7 @@ Não há recuperação de conta via conversa, envio de e-mail ou concessão de a
 
 ## Verificação
 
-- `pnpm run build:vercel`: tipos e build de frontend/API.
+- `pnpm run build:web` e `pnpm run build:api`: tipos e build de cada aplicação.
 - `pnpm test:routing`: 23 testes HTTP, sendo 17 anteriores e 6 novos do concierge. Testam configuração desativada, origem, validação, resposta real do gerador injetado, erro sem detalhes privados e limite de tentativas. Não chamam IA real.
 - `python3 scripts/login-browser.py`: temas/persistência, atalhos, preferências, modo tranquilo, guia, dispositivos pequenos, download evitado com movimento reduzido e cena WebGL em Chromium com renderização de software. Não mede desempenho de GPU em aparelhos reais.
 - `python3 scripts/workspace-browser.py`: regressão dos 23 cenários existentes, incluindo seis perfis, falhas de identidade e permissões, formulários e navegação.

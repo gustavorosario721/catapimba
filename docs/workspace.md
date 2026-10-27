@@ -46,7 +46,7 @@ O aviso de RLS sem política em `private.audit_events` é intencional: acesso di
 
 ## Testes verificáveis
 
-- `pnpm run build:vercel`: TypeScript, API e frontend de produção.
+- `pnpm run build:web` e `pnpm run build:api`: tipos e builds separados.
 - `pnpm test:routing`: 17 testes HTTP, com Supabase simulado para validação de transporte, erros, identidade encaminhada, exportação e regressões de roteamento.
 - `supabase/tests/workspace.sql`: testes SQL no PostgreSQL real em transação com rollback. Cobrem aprovação, papéis institucionais, isolamento, SELECT direto com RLS, edição restrita de aluno, pesos congelados, notas inválidas, envio duplicado, encerramento, publicação, empates, suspensão e auditoria.
 - `supabase/tests/platform-institutions.sql`: administração global sem vínculo e concessão controlada/revogação.
@@ -84,4 +84,4 @@ LGPD ainda requer decisões institucionais sobre finalidade, base legal, retenç
 
 ## Evidência do refinamento
 
-Consulte [refinement-validation.md](refinement-validation.md) para alterações, os 23 testes de navegador executados nesta rodada, comparação de tamanho do build e limites da validação local. O código refinado foi consolidado na `main`; o refinamento ainda não foi implantado na Vercel.
+Consulte [refinement-validation.md](refinement-validation.md) para alterações, os 23 testes de navegador executados nesta rodada, comparação de tamanho do build e limites da validação local. O código refinado foi consolidado na `main`; os registros históricos de publicação estão em `refinement-validation.md`; a arquitetura atual está em `deployment.md`.

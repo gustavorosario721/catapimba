@@ -1,3 +1,5 @@
+> Registro histórico da etapa anterior. A estrutura e a hospedagem atuais estão em [deployment.md](deployment.md).
+
 # Refinamento do Catapimba — validação local
 
 Data: 25/10/2026. Branch: `feat/identity-foundation`, partindo de `71b9dd3`.

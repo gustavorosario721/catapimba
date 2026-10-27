@@ -1,12 +1,20 @@
 # Catapimba — Gestão e Avaliação de Startups
 
-Aplicação Vite + Express em um único projeto Vercel, com Google via Supabase Auth e PostgreSQL. A área real `/conta` oferece gestão de instituições, usuários e acessos, projetos/equipes, critérios, bancas, avaliações, resultados, CSV, pódio e auditoria. Não há dados ou login de demonstração. Os endereços antigos, como `/instituicao`, encaminham para a área real e exigem sessão.
+Plataforma multi-institucional em português. **Frontend React/Vite no Vercel; API Express no Render; PostgreSQL e Google OAuth no Supabase.** Não há login simulado nem conteúdo fictício em produção.
 
-Consulte [o roteiro de uso, permissões, testes e limites](docs/workspace.md) e [a configuração Supabase](docs/setup-supabase.md).
+## Estrutura
 
-## Preparação
+- `apps/web`: interface, autenticação pelo SDK Supabase, acessibilidade e módulos institucionais em `src/features/workspace`.
+- `apps/api`: validação de tokens, endpoints institucionais, exportação e integração Supabase com a identidade do usuário.
+- `packages/api-spec`, `packages/api-client-react`, `packages/api-zod`: contrato OpenAPI e código gerado.
+- `packages/db`: scaffold Drizzle legado; não representa o esquema real. Não usar `push` para recriar o banco.
+- `supabase/migrations` e `supabase/tests`: histórico do banco e testes SQL com rollback.
+- `tools/mockup-sandbox`: ferramenta de componentes separada, não publicada como produto.
+- `scripts` e `docs`: verificações e documentação.
 
-Use Node.js 24 e pnpm 11.25.0, declarados em `package.json`. Na raiz:
+## Preparação e execução local
+
+Use Node.js 24 e pnpm 11.25.0. Não execute `npm install`.
 
 ```bash
 pnpm install --frozen-lockfile
@@ -14,48 +22,45 @@ pnpm run typecheck
 pnpm run build
 ```
 
-O lockfile oficial é `pnpm-lock.yaml`; não execute `npm install`.
-A instalação não deve apagar arquivos versionados.
-A política de idade mínima de dependências permanece habilitada.
-
-## Execução local
-
-Frontend em http://localhost:5173:
+Configure `apps/web/.env.local` e `apps/api/.env.local` a partir dos respectivos `.env.example`. As variáveis `VITE_*` são públicas. Nunca inclua service-role, senha de banco ou segredos OAuth nelas.
 
 ```bash
+# Terminal do frontend, porta 5173
 pnpm --filter @workspace/startup-institution-platform run dev
+
+# Terminal da API: iniciar após build:api, carregando seu arquivo local
+PORT=3001 NODE_ENV=development node --env-file=apps/api/.env.local apps/api/dist/index.mjs
 ```
 
-API em outro terminal, em http://localhost:3001/api/healthz:
+Em desenvolvimento, `VITE_API_URL` pode ficar vazio para usar o proxy local `/api`. Em hospedagem, configure a origem HTTPS do Render, sem `/api`, por exemplo `https://SUA-API.onrender.com`. A API usa `FRONTEND_ORIGINS` com as origens exatas autorizadas, separadas por vírgula. CORS não substitui autenticação e autorização.
+
+## Build e hospedagem
 
 ```bash
-PORT=3001 pnpm --filter @workspace/api-server run dev
+pnpm run build:web  # Somente frontend, usado pelo Vercel
+pnpm run build:api  # Somente backend, usado pelo Render
+pnpm run start:api  # Express, lê PORT e escuta em 0.0.0.0
 ```
 
-O health check confirma apenas o processo, sem consultar banco. Para a área real, configure as variáveis dos arquivos `.env.example` de frontend e API, usando URL e chave publicável Supabase. As migrações oficiais estão em `supabase/migrations`; o pacote legado `lib/db` não é utilizado por essas operações. Não execute comandos Drizzle para recriar o esquema.
+O Vercel publica `apps/web/dist/public` e as rotas da SPA. Não há função Express em `api/`. O Render executa a API, cujo health check é `/api/healthz`. `render.yaml` documenta um serviço Free com deploy automático desativado. A configuração via API do Render é registrada em [implantação](docs/deployment.md).
 
-O frontend local encaminha `/api` para o Express. Em Vercel, `vercel.json` direciona `/api/*` à função `api/index.mjs` e as rotas da interface à SPA. A raiz do projeto Vercel é a raiz deste monorepo. Não existe servidor separado no Render.
+O login Google retorna ao frontend em `/auth/callback`, autorizado na configuração do Supabase. O backend não hospeda essa página. O primeiro superadministrador continua sendo concedido por procedimento controlado.
 
-O código refinado está na branch `main`. O preview autenticado existente usa `feat/identity-foundation`. O deploy automático da `main` está desativado em `vercel.json` até autorização explícita de publicação. Produção precisa de variáveis e callbacks próprios. Autorização de plataforma é concedida por procedimento controlado, nunca por cadastro público; não use metadados de perfil para conceder privilégios.
-
-## Verificação
+## Validação
 
 ```bash
-pnpm run build:vercel
 pnpm test:routing
-pnpm check:deployment https://URL-DO-PREVIEW
+python3 scripts/workspace-browser.py
+python3 scripts/login-browser.py
+pnpm check:deployment https://FRONTEND https://API
 ```
 
-Os testes SQL com rollback estão em `supabase/tests`. O teste de navegador `python3 scripts/workspace-browser.py` usa fixtures restritas ao processo de teste; exige Vite preview local, Python Playwright e Chromium. Consulte `docs/workspace.md`. Diferencie build, testes com API simulada, testes reais de banco e validação de implantação.
+Os testes HTTP e de navegador usam fixtures, não sessões reais. Os testes de navegador exigem Playwright/Chromium e um preview Vite local. Os SQL usam transações com rollback. Consulte [permissões e uso](docs/workspace.md), [configuração Supabase](docs/setup-supabase.md) e [implantação](docs/deployment.md).
 
-## Credenciais e orçamento
+## Segurança e orçamento
 
-Nunca versionar segredos. `VITE_*` é público: nunca incluir senha de banco, `service_role` ou segredo OAuth. O backend usa JWT do usuário e chave publicável. As funções privilegiadas verificam autorização explicitamente, além de RLS para consultas diretas.
+Papéis pertencem ao vínculo institucional. Ser superadministrador não concede o papel de avaliador: são exigidos vínculo ativo explícito e designação para a banca. O avaliador pode revisar suas próprias notas enquanto a banca estiver aberta; após o encerramento, o banco bloqueia novos envios. Todas as operações protegidas verificam tokens, permissões e instituição no servidor/banco.
 
-Orçamento: R$ 0 durante desenvolvimento e demonstração. Nenhum plano pago foi contratado. Vercel Hobby tem restrições de uso comercial; Supabase Free tem cotas e pode pausar por inatividade. Monitorar limites antes de expandir uso.
+Meta de custo: R$ 0 para desenvolvimento e demonstração. Nenhum plano pago foi contratado. O Render Free hiberna após inatividade e tem cotas compartilhadas de uso. O frontend apresenta espera e erros de conexão sem repetir automaticamente comandos de escrita. Vercel e Supabase também têm limites de uso. A IA generativa continua desativada; o guia de acesso tem respostas prontas identificadas como tal.
 
-O refinamento visual usa componentes compartilhados, tipografia de sistema e uma paleta única. Solicitação de acesso é feita somente na conta autenticada; recuperação de acesso é tratada pelo Google, sem senha própria ou envio de e-mail simulado.
-
-O [relatório de refinamento](docs/refinement-validation.md) registra o que mudou, testes locais e limites. O código foi consolidado na `main`; a publicação manual desta versão foi autorizada. A versão do commit `89430e0` foi implantada manualmente em produção em 25/10/2026: https://catapimba-mu.vercel.app. Novos deploys continuam sujeitos à autorização.
-
-A evolução local do [login dividido com acessibilidade e pódio 3D](docs/login-accessibility.md) preserva a entrada Google. O guia textual funciona sem IA; a geração opcional aguarda provedor/orçamento e está desativada por padrão. Esta evolução é disponibilizada para revisão em um preview da branch `feat/login-accessibility`; a produção não foi alterada.
+O merge da branch `feat/login-accessibility` em `main` foi solicitado e realizado. Publicações em produção continuam sendo ações separadas; um merge não comprova que o site já recebeu o código novo.

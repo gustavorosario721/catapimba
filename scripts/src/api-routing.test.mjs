@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { after, before, test } from 'node:test';
-import app from '../../api/index.mjs';
+import app from '../../apps/api/dist/app.mjs';
 
 const server = createServer(app);
 let origin;
