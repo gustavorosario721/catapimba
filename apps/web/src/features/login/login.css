@@ -330,6 +330,74 @@ kbd {
   line-height: 1.7;
   margin: 0 0 28px;
 }
+.login-access-card {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.login-access-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--emerald);
+}
+.login-access-title h2 {
+  font-size: 1rem;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.login-access-card > p {
+  font-size: 0.86rem;
+  line-height: 1.75;
+  margin: 16px 0 23px;
+}
+.login-access-card .google-signin {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 0;
+  gap: 13px;
+}
+.google-signin svg {
+  margin-left: auto;
+}
+.google-letter {
+  font: 700 19px/1 var(--font-sans);
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: #27554b;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+}
+.login-access-card .login-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.72rem;
+  margin-bottom: 0;
+}
+.login-privacy svg {
+  margin-top: 3px;
+}
+.login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 20px;
+  font-size: 0.86rem;
+}
+.login-error svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.login-access-card .auth-links {
+  gap: 14px;
+  margin-top: 24px;
+  font-size: 0.76rem;
+}
 .concierge {
   border: 1px solid var(--border);
   border-radius: 16px;
