@@ -54,7 +54,7 @@ export function WorkspaceApp({
   signingOut: boolean;
 }) {
   const [path] = useLocation();
-  const directEvaluation = /^\\/avaliar\\/([^/]+)\\/([^/]+)$/.exec(path);
+  const directEvaluation = /^\/avaliar\/([^/]+)\/([^/]+)$/.exec(path);
   const directInstitutionId = directEvaluation?.[1] ?? "";
   const directEventId = directEvaluation?.[2] ?? "";
   const [menuOpen, setMenuOpen] = useState(false);
