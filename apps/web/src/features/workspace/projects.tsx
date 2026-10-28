@@ -26,6 +26,8 @@ export function ProjectsModule({
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState("");
   const [year, setYear] = useState("");
+  const [semester, setSemester] = useState("");
+  const [studentId, setStudentId] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
@@ -85,6 +87,8 @@ export function ProjectsModule({
       (showArchived || !p.archived) &&
       (!stage || p.stage === stage) &&
       (!year || p.year === Number(year)) &&
+      (!semester || p.semester === Number(semester)) &&
+      (!studentId || data.participants.some((participant) => participant.project_id === p.id && participant.user_id === studentId && participant.kind === "student")) &&
       `${p.name} ${p.summary} ${p.category}`
         .toLowerCase()
         .includes(search.toLowerCase()),
@@ -129,6 +133,22 @@ export function ProjectsModule({
                 .map((v) => (
                   <option key={v}>{v}</option>
                 ))}
+            </select>
+          </InputField>
+          <InputField label="Semestre">
+            <select value={semester} onChange={(e) => setSemester(e.target.value)}>
+              <option value="">Todos</option>
+              <option value="1">1º semestre</option>
+              <option value="2">2º semestre</option>
+            </select>
+          </InputField>
+          <InputField label="Aluno">
+            <select value={studentId} onChange={(e) => setStudentId(e.target.value)}>
+              <option value="">Todos os alunos</option>
+              {Array.from(new Set(data.participants.filter((participant) => participant.kind === "student").map((participant) => participant.user_id)))
+                .map((id) => ({ id, name: name(id) }))
+                .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+                .map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
             </select>
           </InputField>
           <label className="workspace-check">
