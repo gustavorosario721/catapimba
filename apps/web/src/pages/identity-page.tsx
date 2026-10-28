@@ -56,7 +56,15 @@ export function IdentityPage({
   }, [mode]);
 
   useEffect(() => {
-    if (session && mode !== "account") navigate("/conta", { replace: true });
+    if (session && mode !== "account") {
+      const requested = mode === "callback"
+        ? new URLSearchParams(window.location.search).get("next")
+        : null;
+      const next = requested && /^\\/avaliar\\/[^/]+\\/[^/]+$/.test(requested)
+        ? requested
+        : "/conta";
+      navigate(next, { replace: true });
+    }
   }, [session, mode, navigate]);
 
   useEffect(() => {
@@ -105,9 +113,14 @@ export function IdentityPage({
         setBusy(false);
         return;
       }
+      const next = /^\\/avaliar\\/[^/]+\\/[^/]+$/.test(window.location.pathname)
+        ? `?next=${encodeURIComponent(window.location.pathname)}`
+        : "";
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback${next}`,
+        },
       });
       if (authError) throw authError;
     } catch {
