@@ -6,6 +6,9 @@ export const platformRouter = Router();
 async function administrator(req: Request, res: Response) {
   const identity = await authenticate(req, res);
   if (!identity) return null;
+  const { data: demoStatus, error: demoError } = await identity.client.rpc('demo_role_status');
+  if (demoError) { res.status(503).json({ error: 'Não foi possível verificar o contexto de acesso.' }); return null; }
+  if (demoStatus?.active) { res.status(403).json({ error: 'A administração global fica indisponível durante a demonstração de perfil.' }); return null; }
   const { data, error } = await identity.client.from('platform_administrators')
     .select('user_id').eq('user_id', identity.user.id).is('revoked_at', null).maybeSingle();
   if (error) { res.status(503).json({ error: 'Não foi possível verificar o acesso.' }); return null; }

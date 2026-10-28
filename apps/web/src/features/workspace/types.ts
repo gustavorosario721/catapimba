@@ -98,6 +98,8 @@ export type Result = {
 };
 export type WorkspaceData = {
   institution: Institution;
+  demoRole?: Role | null;
+  demoRoles?: Role[];
   capabilities: {
     manageMembers: boolean;
     manageProjects: boolean;

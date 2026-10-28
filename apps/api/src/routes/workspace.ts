@@ -56,6 +56,30 @@ workspaceRouter.get("/workspace/catalog", async (req, res) => {
   }
   res.json(data);
 });
+workspaceRouter.post("/workspace/:institutionId/demo-role", async (req, res) => {
+  const identity = await authenticate(req, res);
+  if (!identity) return;
+  const body = req.body;
+  if (
+    !uuid.test(String(req.params.institutionId)) ||
+    !body || Array.isArray(body) ||
+    Object.keys(body).some((key) => key !== "role") ||
+    (body.role !== null && typeof body.role !== "string") ||
+    (typeof body.role === "string" && !["institution_admin", "coordinator", "mentor", "evaluator", "student"].includes(body.role))
+  ) {
+    res.status(400).json({ error: "Perfil de demonstração inválido." });
+    return;
+  }
+  const { data, error } = await identity.client.rpc("demo_role_switch", {
+    p_institution: req.params.institutionId,
+    p_role: body.role,
+  });
+  if (error) {
+    failure(res, error);
+    return;
+  }
+  res.json(data);
+});
 workspaceRouter.get("/workspace/:institutionId", async (req, res) => {
   const identity = await authenticate(req, res);
   if (!identity) return;
