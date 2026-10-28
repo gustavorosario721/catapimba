@@ -185,7 +185,7 @@ language sql security invoker set search_path='' as $$
 $$;
 
 create function public.demo_role_status() returns jsonb
-language sql stable security definer set search_path='' as $
+language sql stable security definer set search_path='' as $$
   select jsonb_build_object(
     'active',private.demo_mode_active(),
     'role',(select c.role from private.demo_role_context c
