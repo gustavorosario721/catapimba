@@ -13,7 +13,6 @@ import {
   ListChecks,
   ClipboardCheck,
   ChartNoAxesCombined,
-  FileBarChart,
   Trophy,
   History,
   LogOut,
@@ -82,8 +81,8 @@ export function WorkspaceApp({
     scope?.institution.id === institutionId && institution?.status === "active"
       ? scope
       : null;
-  const module =
-    path === "/conta" ? "overview" : (path.split("/")[2] ?? "overview");
+  const routeModule = path === "/conta" ? "overview" : (path.split("/")[2] ?? "overview");
+  const module = routeModule === "reports" ? "results" : routeModule;
   const ownRoles = identity.memberships
     .find((m) => m.institution_id === institutionId)
     ?.membership_roles.map((r) => roleNames[r.role])
@@ -249,15 +248,9 @@ export function WorkspaceApp({
     },
     {
       id: "results",
-      name: "Resultados",
+      name: "Resultados e relatórios",
       icon: ChartNoAxesCombined,
       show: !!data,
-    },
-    {
-      id: "reports",
-      name: "Relatórios",
-      icon: FileBarChart,
-      show: !!data?.capabilities.manageEvents,
     },
     { id: "podium", name: "Pódio", icon: Trophy, show: !!data },
     {
@@ -597,13 +590,7 @@ export function WorkspaceApp({
               token={token}
               userId={identity.user.id}
               institutionId={institutionId}
-              mode={
-                module === "podium"
-                  ? "podium"
-                  : module === "reports"
-                    ? "reports"
-                    : "results"
-              }
+              mode={module === "podium" ? "podium" : "results"}
             />
           ) : module === "audit" ? (
             <Card>
