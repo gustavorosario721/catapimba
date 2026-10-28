@@ -84,8 +84,9 @@ export function ResultsModule({
     project.name.toLocaleLowerCase("pt-BR").includes(exportSearch.toLocaleLowerCase("pt-BR"))
   );
   const filteredProjectIds = new Set(filteredProjects.map((project) => project.id));
+  const hasPortfolioFilters = Boolean(exportYear || exportSemester || exportStudent || exportSearch);
   const rows = result?.rows.filter((r) =>
-    filteredProjectIds.has(r.id) &&
+    (!hasPortfolioFilters || filteredProjectIds.has(r.id)) &&
     r.name.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR"))
   ) ?? [];
   return (
