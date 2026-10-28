@@ -227,7 +227,7 @@ workspaceRouter.get("/workspace/:institutionId/export", async (req, res) => {
   if (req.query.type === "projects") {
     const requestedStudent = typeof req.query.student === "string" ? req.query.student : "";
     const allowedStudentIds = new Set(
-      data.participants
+      (Array.isArray(data.participants) ? data.participants : [])
         .filter((participant: { kind: string; user_id: string }) => participant.kind === "student")
         .map((participant: { user_id: string }) => participant.user_id),
     );
@@ -237,7 +237,7 @@ workspaceRouter.get("/workspace/:institutionId/export", async (req, res) => {
       const projects = data.projects.filter((project: Record<string, unknown>) =>
         (year === null || project.year === year) &&
         (semester === null || project.semester === semester) &&
-        (!requestedStudent || data.participants.some((participant: { project_id: string; user_id: string; kind: string }) =>
+        (!requestedStudent || (Array.isArray(data.participants) ? data.participants : []).some((participant: { project_id: string; user_id: string; kind: string }) =>
           participant.project_id === project.id && participant.user_id === requestedStudent && participant.kind === "student")),
       );
       rows = [
