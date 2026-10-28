@@ -250,27 +250,19 @@ export function MembersModule({
               onChange={(e) => setEmail(e.target.value)}
             />
           </InputField>
-          <fieldset>
-            <legend>Papéis neste vínculo</legend>
-            {Object.entries(roleNames)
-              .filter(([r]) => isPlatform || r !== "institution_admin")
-              .map(([r, label]) => (
-                <label className="workspace-check" key={r}>
-                  <input
-                    type="checkbox"
-                    checked={roles.includes(r as Role)}
-                    onChange={(e) =>
-                      setRoles((current) =>
-                        e.target.checked
-                          ? [...current, r as Role]
-                          : current.filter((x) => x !== r),
-                      )
-                    }
-                  />
-                  {label}
-                </label>
-              ))}
-          </fieldset>
+          <InputField label="Papel neste vínculo (apenas um)">
+            <select
+              required
+              value={roles[0] ?? "student"}
+              onChange={(e) => setRoles([e.target.value as Role])}
+            >
+              {Object.entries(roleNames)
+                .filter(([r]) => isPlatform || r !== "institution_admin")
+                .map(([r, label]) => (
+                  <option key={r} value={r}>{label}</option>
+                ))}
+            </select>
+          </InputField>
           <InputField label="Situação">
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="active">Ativo / aprovar</option>
