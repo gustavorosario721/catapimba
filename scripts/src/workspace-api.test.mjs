@@ -32,6 +32,7 @@ const upstream = createServer(async (req, res) => {
       },
       projects: [
         {
+          id: "93000000-0000-0000-0000-000000000001",
           name: '=HYPERLINK("x")',
           summary: "  +SUM(1)",
           category: "@x",
@@ -40,6 +41,7 @@ const upstream = createServer(async (req, res) => {
           semester: 2,
         },
       ],
+      participants: [{ project_id: "93000000-0000-0000-0000-000000000001", user_id: "94000000-0000-0000-0000-000000000001", kind: "student" }],
       results: [
         {
           event_id: id,
@@ -153,4 +155,27 @@ test("CSV export quotes fields, neutralizes formulas and keeps headers", async (
   assert.match(csv, /'=HYPERLINK\(""x""\)/);
   assert.match(csv, /'  \+SUM/);
   assert.match(csv, /'@x/);
+});
+
+test("XLSX export returns a valid ZIP workbook and keeps cell text literal", async () => {
+  const r = await call("/export?type=projects&format=xlsx");
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get("content-type"), /spreadsheetml\.sheet/);
+  assert.match(r.headers.get("content-disposition"), /\.xlsx/);
+  const bytes = Buffer.from(await r.arrayBuffer());
+  assert.equal(bytes.subarray(0, 2).toString(), "PK");
+  const packageText = bytes.toString("utf8");
+  assert.match(packageText, /xl\/worksheets\/sheet1\.xml/);
+  assert.match(packageText, /HYPERLINK/);
+  assert.doesNotMatch(packageText, /<f>/);
+});
+test("XLSX project export applies year, semester and authorized student filters", async () => {
+  const student = "94000000-0000-0000-0000-000000000001";
+  const matching = await call(`/export?type=projects&format=xlsx&year=2026&semester=2&student=${student}`);
+  assert.equal(matching.status, 200);
+  assert.match(Buffer.from(await matching.arrayBuffer()).toString("utf8"), /HYPERLINK/);
+  const excluded = await call(`/export?type=projects&format=xlsx&year=2025&semester=2&student=${student}`);
+  assert.equal(excluded.status, 200);
+  assert.doesNotMatch(Buffer.from(await excluded.arrayBuffer()).toString("utf8"), /HYPERLINK/);
+  assert.equal((await call("/export?type=projects&format=xlsx&semester=3")).status, 400);
 });
