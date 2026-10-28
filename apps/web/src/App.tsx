@@ -51,7 +51,11 @@ export default function App() {
   if (path === "/") return <PublicHome />;
   if (path === "/login") return <IdentityRoute mode="login" />;
   if (path === "/auth/callback") return <IdentityRoute mode="callback" />;
-  if (path === "/conta" || path.startsWith("/app/"))
+  if (
+    path === "/conta" ||
+    path.startsWith("/app/") ||
+    /^\\/avaliar\\/[^/]+\\/[^/]+$/.test(path)
+  )
     return <IdentityRoute mode="account" />;
   if (path === "/app") return <Redirect to="/conta" />;
   if (path === "/solicitar-acesso") return <AccessInfo />;
