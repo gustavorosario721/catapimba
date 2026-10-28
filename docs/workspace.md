@@ -85,3 +85,10 @@ LGPD ainda requer decisões institucionais sobre finalidade, base legal, retenç
 ## Evidência do refinamento
 
 Consulte [refinement-validation.md](refinement-validation.md) para alterações, os 23 testes de navegador executados nesta rodada, comparação de tamanho do build e limites da validação local. O código refinado foi consolidado na `main`; os registros históricos de publicação estão em `refinement-validation.md`; a arquitetura atual está em `deployment.md`.
+
+
+## Consulta unificada e encerramento de banca
+
+A navegação **Resultados e relatórios** reúne a classificação da banca, a listagem do portfólio e as exportações. Os filtros de ano, semestre e aluno são aplicados à listagem visível e à classificação; quando exportado, o arquivo Excel usa os mesmos filtros. A exportação continua restrita à gestão institucional.
+
+Depois que uma banca é encerrada, os projetos associados e suas equipes ficam congelados. A interface oculta as ações de edição e a camada PostgreSQL rejeita alterações diretas no projeto ou nos participantes, preservando a integridade do resultado encerrado. Projetos que não participaram de uma banca encerrada continuam editáveis conforme as permissões existentes.
