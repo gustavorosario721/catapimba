@@ -66,6 +66,7 @@ export function WorkspaceApp({
   const [catalogError, setCatalogError] = useState("");
   const [catalog, setCatalog] = useState<Institution[]>([]);
   const [institutionId, setInstitutionId] = useState(directInstitutionId);
+  const [demoModeActive, setDemoModeActive] = useState(false);
   const [scope, setScope] = useState<WorkspaceData | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -76,7 +77,8 @@ export function WorkspaceApp({
   const activeMemberships = identity.memberships.filter(
     (m) => m.status === "active" && m.institutions?.status === "active",
   );
-  const options = identity.isPlatformAdministrator
+  const effectivePlatformAdministrator = identity.isPlatformAdministrator && !demoModeActive;
+  const options = effectivePlatformAdministrator
     ? catalog
     : activeMemberships.map((m) => m.institutions!).filter(Boolean);
   const institution = options.find((i) => i.id === institutionId);
@@ -231,7 +233,7 @@ export function WorkspaceApp({
       id: "institutions",
       name: "Instituições",
       icon: Building2,
-      show: identity.isPlatformAdministrator,
+      show: effectivePlatformAdministrator,
     },
     {
       id: "members",
@@ -292,7 +294,7 @@ export function WorkspaceApp({
         ))}
     </nav>
   );
-  const roleLabel = identity.isPlatformAdministrator
+  const roleLabel = effectivePlatformAdministrator
     ? "Superadministrador"
     : ownRoles || "Aguardando vínculo";
 
@@ -341,7 +343,7 @@ export function WorkspaceApp({
           <Logo />
         </Link>
         <div className="workspace-label">
-          {identity.isPlatformAdministrator
+          {effectivePlatformAdministrator
             ? "Administração da plataforma"
             : (institution?.name ?? "Minha conta")}
         </div>
@@ -409,6 +411,40 @@ export function WorkspaceApp({
                 </option>
               ))}
             </select>
+            {data?.demoRoles && data.demoRoles.length > 0 && (
+              <label className="demo-role-switch">
+                <span>Perfil de demonstração</span>
+                <select
+                  aria-label="Alternar perfil de demonstração"
+                  value={data.demoRole ?? ""}
+                  disabled={busy}
+                  onChange={async (event) => {
+                    const role = event.target.value || null;
+                    setBusy(true);
+                    setError("");
+                    setNotice("");
+                    try {
+                      await api(`/workspace/${institutionId}/demo-role`, {
+                        method: "POST",
+                        body: JSON.stringify({ role }),
+                      });
+                      setDemoModeActive(Boolean(role));
+                      setNotice(role ? "Perfil de demonstração ativado." : "Perfil real restaurado.");
+                      setAttempt((value) => value + 1);
+                    } catch (reason) {
+                      setError(reason instanceof Error ? reason.message : "Não foi possível alternar o perfil.");
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  <option value="">Perfil real</option>
+                  {data.demoRoles.map((role) => (
+                    <option key={role} value={role}>{roleNames[role]}</option>
+                  ))}
+                </select>
+              </label>
+            )}
             <button
               className="btn btn-ghost btn-refresh"
               aria-label="Atualizar dados"
@@ -457,7 +493,7 @@ export function WorkspaceApp({
         <main id="main-content" className="content workspace-content">
           <PageHead
             eyebrow={
-              identity.isPlatformAdministrator
+              effectivePlatformAdministrator
                 ? "ADMINISTRAÇÃO DA PLATAFORMA"
                 : (ownRoles ?? "MINHA CONTA")
             }
@@ -498,7 +534,7 @@ export function WorkspaceApp({
               institutionId={institutionId}
             />
           )}
-          {module === "institutions" && identity.isPlatformAdministrator ? (
+          {module === "institutions" && effectivePlatformAdministrator ? (
             <PlatformPanel
               token={token}
               onChange={() => setAttempt((v) => v + 1)}
@@ -573,7 +609,7 @@ export function WorkspaceApp({
                 <Link className="btn btn-primary" href="/app/access">
                   Meus acessos
                 </Link>
-                {identity.isPlatformAdministrator && (
+                {effectivePlatformAdministrator && (
                   <Link className="btn btn-primary" href="/app/institutions">
                     Gerenciar instituições
                   </Link>
@@ -599,7 +635,7 @@ export function WorkspaceApp({
               data={data}
               command={command}
               busy={busy}
-              isPlatform={identity.isPlatformAdministrator}
+              isPlatform={effectivePlatformAdministrator}
             />
           ) : module === "projects" ? (
             <ProjectsModule
