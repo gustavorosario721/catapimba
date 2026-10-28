@@ -64,7 +64,11 @@ paths:
       parameters:
         - {name: institutionId, in: path, required: true, schema: {type: string, format: uuid}}
         - {name: type, in: query, required: true, schema: {type: string, enum: [projects, results]}}
-        - {name: event, in: query, schema: {type: string, format: uuid}}
+        - {name: format, in: query, schema: {type: string, enum: [csv, xlsx], default: csv}}
+        - {name: event, in: query, schema: {type: string, format: uuid, description: Required for result exports}}
+        - {name: year, in: query, schema: {type: integer, minimum: 2000, maximum: 2200, description: Optional portfolio filter}}
+        - {name: semester, in: query, schema: {type: integer, enum: [1, 2], description: Optional portfolio filter}}
+        - {name: student, in: query, schema: {type: string, format: uuid, description: Optional portfolio filter; must be a student associated with an accessible project}}
       responses:
         "200":
           description: Arquivo CSV com neutralização de fórmulas
