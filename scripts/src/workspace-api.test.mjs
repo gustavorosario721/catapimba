@@ -189,5 +189,5 @@ test("XLSX result export applies the same period and student filters", async () 
   assert.match(Buffer.from(await matching.arrayBuffer()).toString("utf8"), />Startup Avaliada</);
   const excluded = await call(`/export?type=results&format=xlsx&event=${id}&year=2025&semester=2&student=${student}`);
   assert.equal(excluded.status, 200);
-  assert.doesNotMatch(Buffer.from(await excluded.arrayBuffer()).toString("utf8"), />Projeto</);
+  assert.doesNotMatch(Buffer.from(await excluded.arrayBuffer()).toString("utf8"), />Startup Avaliada</);
 });
