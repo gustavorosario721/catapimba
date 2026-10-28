@@ -34,7 +34,6 @@ export function ResultsModule({
   const [exportYear, setExportYear] = useState("");
   const [exportSemester, setExportSemester] = useState("");
   const [exportStudent, setExportStudent] = useState("");
-  const [exportSearch, setExportSearch] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
   const result =
@@ -50,11 +49,9 @@ export function ResultsModule({
     try {
       const params = new URLSearchParams({ type, format: "xlsx" });
       if (type === "results" && result) params.set("event", result.event_id);
-      if (type === "projects") {
-        if (exportYear) params.set("year", exportYear);
-        if (exportSemester) params.set("semester", exportSemester);
-        if (exportStudent) params.set("student", exportStudent);
-      }
+      if (exportYear) params.set("year", exportYear);
+      if (exportSemester) params.set("semester", exportSemester);
+      if (exportStudent) params.set("student", exportStudent);
       const response = await apiFetch(
         `/api/workspace/${institutionId}/export?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
@@ -80,11 +77,10 @@ export function ResultsModule({
     (!exportStudent || data.participants.some((participant) =>
       participant.project_id === project.id &&
       participant.user_id === exportStudent &&
-      participant.kind === "student")) &&
-    project.name.toLocaleLowerCase("pt-BR").includes(exportSearch.toLocaleLowerCase("pt-BR"))
+      participant.kind === "student"))
   );
   const filteredProjectIds = new Set(filteredProjects.map((project) => project.id));
-  const hasPortfolioFilters = Boolean(exportYear || exportSemester || exportStudent || exportSearch);
+  const hasPortfolioFilters = Boolean(exportYear || exportSemester || exportStudent);
   const rows = result?.rows.filter((r) =>
     (!hasPortfolioFilters || filteredProjectIds.has(r.id)) &&
     r.name.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR"))
@@ -112,9 +108,6 @@ export function ResultsModule({
             <h3>Projetos e relatórios</h3>
             <p>Os filtros abaixo atualizam a lista de projetos, a classificação exibida e o arquivo Excel.</p>
             <div className="workspace-filters">
-              <InputField label="Pesquisar projetos">
-                <input value={exportSearch} onChange={(event) => setExportSearch(event.target.value)} placeholder="Nome do projeto" />
-              </InputField>
               <InputField label="Ano">
                 <select value={exportYear} onChange={(event) => setExportYear(event.target.value)}>
                   <option value="">Todos os anos</option>
