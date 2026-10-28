@@ -60,7 +60,7 @@ export function IdentityPage({
       const requested = mode === "callback"
         ? new URLSearchParams(window.location.search).get("next")
         : null;
-      const next = requested && /^\\/avaliar\\/[^/]+\\/[^/]+$/.test(requested)
+      const next = requested && /^\/avaliar\/[^/]+\/[^/]+$/.test(requested)
         ? requested
         : "/conta";
       navigate(next, { replace: true });
@@ -113,7 +113,7 @@ export function IdentityPage({
         setBusy(false);
         return;
       }
-      const next = /^\\/avaliar\\/[^/]+\\/[^/]+$/.test(window.location.pathname)
+      const next = /^\/avaliar\/[^/]+\/[^/]+$/.test(window.location.pathname)
         ? `?next=${encodeURIComponent(window.location.pathname)}`
         : "";
       const { error: authError } = await supabase.auth.signInWithOAuth({
