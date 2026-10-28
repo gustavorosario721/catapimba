@@ -54,7 +54,7 @@ export default function App() {
   if (
     path === "/conta" ||
     path.startsWith("/app/") ||
-    /^\\/avaliar\\/[^/]+\\/[^/]+$/.test(path)
+    /^\/avaliar\/[^/]+\/[^/]+$/.test(path)
   )
     return <IdentityRoute mode="account" />;
   if (path === "/app") return <Redirect to="/conta" />;
