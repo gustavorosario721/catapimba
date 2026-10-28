@@ -12,6 +12,8 @@ const upstream = createServer(async (req, res) => {
     res.end(JSON.stringify({ id: userId, is_anonymous: false }));
   } else if (req.url.startsWith('/rest/v1/platform_administrators')) {
     res.end(JSON.stringify(req.headers.authorization === 'Bearer admin' ? { user_id: userId } : null));
+  } else if (req.url.startsWith('/rest/v1/rpc/demo_role_status')) {
+    res.end(JSON.stringify({ active: false }));
   } else if (req.url.startsWith('/rest/v1/rpc/')) {
     rpcCalls.push(req.url);
     res.end(JSON.stringify(institution));
