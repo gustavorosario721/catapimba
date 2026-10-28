@@ -177,5 +177,6 @@ test("XLSX project export applies year, semester and authorized student filters"
   const excluded = await call(`/export?type=projects&format=xlsx&year=2025&semester=2&student=${student}`);
   assert.equal(excluded.status, 200);
   assert.doesNotMatch(Buffer.from(await excluded.arrayBuffer()).toString("utf8"), /HYPERLINK/);
-  assert.equal((await call("/export?type=projects&format=xlsx&semester=3")).status, 400);\n  assert.equal((await call("/export?type=projects&format=pdf")).status, 400);
+  assert.equal((await call("/export?type=projects&format=xlsx&semester=3")).status, 400);
+  assert.equal((await call("/export?type=projects&format=pdf")).status, 400);
 });
