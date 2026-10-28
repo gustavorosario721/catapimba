@@ -297,9 +297,11 @@ export function WorkspaceApp({
         ))}
     </nav>
   );
-  const roleLabel = effectivePlatformAdministrator
-    ? "Superadministrador"
-    : ownRoles || "Aguardando vínculo";
+  const roleLabel = demoModeActive && data?.demoRole
+    ? roleNames[data.demoRole]
+    : effectivePlatformAdministrator
+      ? "Superadministrador"
+      : ownRoles || "Aguardando vínculo";
 
   if (directEvaluation) {
     return (
