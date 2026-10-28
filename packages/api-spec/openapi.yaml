@@ -59,7 +59,7 @@ paths:
   /workspace/{institutionId}/export:
     get:
       operationId: exportWorkspace
-      summary: CSV autorizado para gestão institucional
+      summary: CSV ou Excel autorizado para gestão institucional
       security: [{bearerAuth: []}]
       parameters:
         - {name: institutionId, in: path, required: true, schema: {type: string, format: uuid}}
@@ -71,10 +71,12 @@ paths:
         - {name: student, in: query, schema: {type: string, format: uuid, description: Optional portfolio filter; must be a student associated with an accessible project}}
       responses:
         "200":
-          description: Arquivo CSV com neutralização de fórmulas
+          description: Arquivo CSV ou XLSX com filtros institucionais autorizados
           content:
             text/csv:
               schema: {type: string}
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema: {type: string, format: binary}
         "401": {description: Sessão inválida}
         "403": {description: Exportação restrita à gestão}
         "404": {description: Resultado não encontrado neste contexto}
