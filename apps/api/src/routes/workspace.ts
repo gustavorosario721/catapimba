@@ -256,6 +256,22 @@ workspaceRouter.get("/workspace/:institutionId/export", async (req, res) => {
       res.status(404).json({ error: "Banca não encontrada neste contexto." });
       return;
     }
+    const requestedStudent = typeof req.query.student === "string" ? req.query.student : "";
+    const allowedStudentIds = new Set(
+      (Array.isArray(data.participants) ? data.participants : [])
+        .filter((participant: { kind: string; user_id: string }) => participant.kind === "student")
+        .map((participant: { user_id: string }) => participant.user_id),
+    );
+    const hasFilters = year !== null || semester !== null || requestedStudent !== "";
+    const resultRows = !hasFilters ? event.rows : event.rows.filter((row: Record<string, unknown>) => {
+      const project = data.projects.find((candidate: Record<string, unknown>) => candidate.id === row.id);
+      return Boolean(project) &&
+        (year === null || project.year === year) &&
+        (semester === null || project.semester === semester) &&
+        (!requestedStudent || (allowedStudentIds.has(requestedStudent) &&
+          (Array.isArray(data.participants) ? data.participants : []).some((participant: { project_id: string; user_id: string; kind: string }) =>
+            participant.project_id === row.id && participant.user_id === requestedStudent && participant.kind === "student")));
+    });
     rows = [
       [
         "Banca",
@@ -266,7 +282,7 @@ workspaceRouter.get("/workspace/:institutionId/export", async (req, res) => {
         "Esperadas",
         "Publicado",
       ],
-      ...event.rows.map((r: Record<string, unknown>) => [
+      ...resultRows.map((r: Record<string, unknown>) => [
         event.name,
         r.name,
         r.position,
