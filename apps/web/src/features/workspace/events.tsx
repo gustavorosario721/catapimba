@@ -23,6 +23,7 @@ export function EventsModule({
   const [projectIds, setProjectIds] = useState<string[]>([]);
   const [evaluators, setEvaluators] = useState<string[]>([]);
   const [filter, setFilter] = useState("");
+  const [linkNotice, setLinkNotice] = useState("");
   const selected = data.events.find((e) => e.id === selectedId);
   function edit(ev?: Event) {
     setEditing(ev?.id ?? "new");
@@ -232,6 +233,25 @@ export function EventsModule({
             avaliações visíveis para seu perfil. Cada avaliador designado avalia
             todos os projetos da banca.
           </p>
+          {data.capabilities.manageEvents && selected.status === "open" && (
+            <div className="workspace-actions">
+              <button
+                className="btn btn-ghost"
+                onClick={async () => {
+                  const url = `${window.location.origin}/avaliar/${data.institution.id}/${selected.id}`;
+                  try {
+                    await navigator.clipboard.writeText(url);
+                    setLinkNotice("Link da sala de avaliação copiado. Envie-o aos avaliadores atribuídos a esta banca.");
+                  } catch {
+                    setLinkNotice(url);
+                  }
+                }}
+              >
+                Copiar link da sala de avaliação
+              </button>
+              {linkNotice && <p role="status">{linkNotice}</p>}
+            </div>
+          )}
           {data.capabilities.manageEvents && (
             <div className="workspace-actions">
               {selected.status === "draft" && (

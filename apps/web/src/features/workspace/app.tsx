@@ -54,6 +54,9 @@ export function WorkspaceApp({
   signingOut: boolean;
 }) {
   const [path] = useLocation();
+  const directEvaluation = /^\/avaliar\/([^/]+)\/([^/]+)$/.exec(path);
+  const directInstitutionId = directEvaluation?.[1] ?? "";
+  const directEventId = directEvaluation?.[2] ?? "";
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -62,7 +65,7 @@ export function WorkspaceApp({
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState("");
   const [catalog, setCatalog] = useState<Institution[]>([]);
-  const [institutionId, setInstitutionId] = useState("");
+  const [institutionId, setInstitutionId] = useState(directInstitutionId);
   const [scope, setScope] = useState<WorkspaceData | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -81,7 +84,7 @@ export function WorkspaceApp({
     scope?.institution.id === institutionId && institution?.status === "active"
       ? scope
       : null;
-  const routeModule = path === "/conta" ? "overview" : (path.split("/")[2] ?? "overview");
+  const routeModule = directEvaluation ? "evaluations" : path === "/conta" ? "overview" : (path.split("/")[2] ?? "overview");
   const module = routeModule === "reports" ? "results" : routeModule;
   const ownRoles = identity.memberships
     .find((m) => m.institution_id === institutionId)
@@ -128,12 +131,18 @@ export function WorkspaceApp({
     return () => controller.abort();
   }, [token, attempt]);
   useEffect(() => {
-    if (options.length && !options.some((i) => i.id === institutionId))
+    if (
+      directInstitutionId &&
+      options.some((i) => i.id === directInstitutionId) &&
+      institutionId !== directInstitutionId
+    ) {
+      setInstitutionId(directInstitutionId);
+    } else if (options.length && !options.some((i) => i.id === institutionId)) {
       setInstitutionId(
         options.find((i) => i.status === "active")?.id ?? options[0].id,
       );
-    else if (!options.length && institutionId) setInstitutionId("");
-  }, [catalog, identity, institutionId]);
+    } else if (!options.length && institutionId) setInstitutionId("");
+  }, [catalog, identity, institutionId, directInstitutionId]);
   useEffect(() => {
     const controller = new AbortController();
     setScope(null);
@@ -286,6 +295,45 @@ export function WorkspaceApp({
   const roleLabel = identity.isPlatformAdministrator
     ? "Superadministrador"
     : ownRoles || "Aguardando vínculo";
+
+  if (directEvaluation) {
+    return (
+      <main id="main-content" className="content workspace-content">
+        <PageHead
+          eyebrow="SALA DE AVALIAÇÃO"
+          title="Avaliar projeto"
+          description={institution?.name ?? "Acesso à banca"}
+        />
+        {authError && <div role="alert" className="notice error">{authError}</div>}
+        {error && <div role="alert" className="notice error">{error}</div>}
+        {notice && <div role="status" className="notice">{notice}</div>}
+        {loading || catalogLoading ? (
+          <Card><LoadingState>Validando seu acesso à banca…</LoadingState></Card>
+        ) : !data ? (
+          <Card>
+            <Empty>Não foi possível abrir esta banca no seu contexto institucional. Entre com a conta cadastrada e confirme se seu vínculo está ativo.</Empty>
+            <Link className="btn btn-ghost" href="/conta">Ir para minha conta</Link>
+          </Card>
+        ) : !data.capabilities.evaluate ? (
+          <Card>
+            <Empty>Somente uma conta com o papel de avaliador pode atribuir notas. Sua conta não possui essa permissão nesta instituição.</Empty>
+            <Link className="btn btn-ghost" href="/conta">Ir para minha conta</Link>
+          </Card>
+        ) : (
+          <EvaluationsModule
+            key={`${institutionId}:${directEventId}`}
+            data={data}
+            command={command}
+            busy={busy}
+            userId={identity.user.id}
+            initialEventId={directEventId}
+            simplified
+          />
+        )}
+      </main>
+    );
+  }
+
   return (
     <div className="app-shell workspace-shell">
       <aside className="sidebar">
