@@ -72,13 +72,13 @@ export function WorkspaceOverview({ data, roleLabel }: { data: WorkspaceData; ro
           <p className="overview-role">{roleLabel}</p>
         </div>
         <div className="workspace-filters" aria-label="Filtros do painel">
-          <label className="input-field"><span>Ano</span>
+          <label className="field workspace-field"><span>Ano</span>
             <select value={year} onChange={(event) => setYear(event.target.value)}>
               <option value="">Todos os anos</option>
               {availableYears.map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
-          <label className="input-field"><span>Semestre</span>
+          <label className="field workspace-field"><span>Semestre</span>
             <select value={semester} onChange={(event) => setSemester(event.target.value)}>
               <option value="">Todos</option>
               <option value="1">1º semestre</option>
