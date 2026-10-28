@@ -101,6 +101,93 @@ workspaceRouter.post("/workspace/:institutionId/commands", async (req, res) => {
   res.json(data);
 });
 
+function xmlEscape(value: unknown) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
+function columnName(index: number) {
+  let name = "";
+  for (let value = index + 1; value > 0; value = Math.floor((value - 1) / 26))
+    name = String.fromCharCode(65 + ((value - 1) % 26)) + name;
+  return name;
+}
+
+function crc32(data: Buffer) {
+  let crc = 0xffffffff;
+  for (const byte of data) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit++)
+      crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+// Small dependency-free XLSX writer. Cells are written as text or numbers;
+// user-provided text is never interpreted as a spreadsheet formula.
+export function xlsxBuffer(rows: unknown[][], sheetName = "Relatorio") {
+  const sheetRows = rows.map((row, rowIndex) => {
+    const cells = row.map((value, colIndex) => {
+      const ref = `${columnName(colIndex)}${rowIndex + 1}`;
+      if (typeof value === "number" && Number.isFinite(value))
+        return `<c r="${ref}"><v>${value}</v></c>`;
+      return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xmlEscape(value)}</t></is></c>`;
+    }).join("");
+    return `<row r="${rowIndex + 1}">${cells}</row>`;
+  }).join("");
+  const safeSheetName = xmlEscape(sheetName.slice(0, 31) || "Relatorio");
+  const files: Array<[string, string]> = [
+    ["[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'],
+    ["_rels/.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ["xl/workbook.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${safeSheetName}" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+    ["xl/_rels/workbook.xml.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>'],
+    ["xl/worksheets/sheet1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${sheetRows}</sheetData></worksheet>`],
+  ];
+  const local: Buffer[] = [];
+  const central: Buffer[] = [];
+  let offset = 0;
+  for (const [name, content] of files) {
+    const nameBytes = Buffer.from(name);
+    const body = Buffer.from(content);
+    const crc = crc32(body);
+    const header = Buffer.alloc(30);
+    header.writeUInt32LE(0x04034b50, 0);
+    header.writeUInt16LE(20, 4);
+    header.writeUInt16LE(0, 6);
+    header.writeUInt16LE(0, 8);
+    header.writeUInt32LE(crc, 14);
+    header.writeUInt32LE(body.length, 18);
+    header.writeUInt32LE(body.length, 22);
+    header.writeUInt16LE(nameBytes.length, 26);
+    local.push(header, nameBytes, body);
+    const entry = Buffer.alloc(46);
+    entry.writeUInt32LE(0x02014b50, 0);
+    entry.writeUInt16LE(20, 4);
+    entry.writeUInt16LE(20, 6);
+    entry.writeUInt16LE(0, 8);
+    entry.writeUInt16LE(0, 10);
+    entry.writeUInt32LE(crc, 16);
+    entry.writeUInt32LE(body.length, 20);
+    entry.writeUInt32LE(body.length, 24);
+    entry.writeUInt16LE(nameBytes.length, 28);
+    entry.writeUInt32LE(offset, 42);
+    central.push(entry, nameBytes);
+    offset += header.length + nameBytes.length + body.length;
+  }
+  const centralBytes = Buffer.concat(central);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(files.length, 8);
+  end.writeUInt16LE(files.length, 10);
+  end.writeUInt32LE(centralBytes.length, 12);
+  end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...local, centralBytes, end]);
+}
+
 export function csvCell(value: unknown) {
   let cell = String(value ?? "");
   if (/^[\s]*[=+\-@]/.test(cell) || /^[\t\r]/.test(cell)) cell = `'${cell}`;
@@ -111,7 +198,8 @@ workspaceRouter.get("/workspace/:institutionId/export", async (req, res) => {
   if (!identity) return;
   if (
     !uuid.test(String(req.params.institutionId)) ||
-    !["projects", "results"].includes(String(req.query.type))
+    !["projects", "results"].includes(String(req.query.type)) ||
+    (req.query.format !== undefined && !["csv", "xlsx"].includes(String(req.query.format)))
   ) {
     res.status(400).json({ error: "Exportação inválida." });
     return;
@@ -129,19 +217,37 @@ workspaceRouter.get("/workspace/:institutionId/export", async (req, res) => {
       .json({ error: "Exportação restrita à gestão institucional." });
     return;
   }
+  const year = req.query.year === undefined ? null : Number(req.query.year);
+  const semester = req.query.semester === undefined ? null : Number(req.query.semester);
+  if ((year !== null && (!Number.isInteger(year) || year < 2000 || year > 2200)) ||
+      (semester !== null && ![1, 2].includes(semester))) {
+    res.status(400).json({ error: "Filtros de período inválidos." });
+    return;
+  }
   let rows: unknown[][];
   if (req.query.type === "projects") {
-    rows = [
-      ["Projeto", "Descrição", "Categoria", "Etapa", "Ano", "Semestre"],
-      ...data.projects.map((p: Record<string, unknown>) => [
-        p.name,
-        p.summary,
-        p.category,
-        p.stage,
-        p.year,
-        p.semester,
-      ]),
-    ];
+    const requestedStudent = typeof req.query.student === "string" ? req.query.student : "";
+    const allowedStudentIds = new Set(
+      (Array.isArray(data.participants) ? data.participants : [])
+        .filter((participant: { kind: string; user_id: string }) => participant.kind === "student")
+        .map((participant: { user_id: string }) => participant.user_id),
+    );
+    if (requestedStudent && !allowedStudentIds.has(requestedStudent)) {
+      rows = [["Projeto", "Descrição", "Categoria", "Etapa", "Ano", "Semestre"]];
+    } else {
+      const projects = data.projects.filter((project: Record<string, unknown>) =>
+        (year === null || project.year === year) &&
+        (semester === null || project.semester === semester) &&
+        (!requestedStudent || (Array.isArray(data.participants) ? data.participants : []).some((participant: { project_id: string; user_id: string; kind: string }) =>
+          participant.project_id === project.id && participant.user_id === requestedStudent && participant.kind === "student")),
+      );
+      rows = [
+        ["Projeto", "Descrição", "Categoria", "Etapa", "Ano", "Semestre"],
+        ...projects.map((p: Record<string, unknown>) => [
+          p.name, p.summary, p.category, p.stage, p.year, p.semester,
+        ]),
+      ];
+    }
   } else {
     const event = data.results.find(
       (e: { event_id: string }) => e.event_id === req.query.event,
@@ -171,10 +277,17 @@ workspaceRouter.get("/workspace/:institutionId/export", async (req, res) => {
       ]),
     ];
   }
+  if (req.query.format === "xlsx") {
+    const workbook = xlsxBuffer(rows, req.query.type === "projects" ? "Projetos" : "Resultados");
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="catapimba-${req.query.type}.xlsx"`);
+    res.send(workbook);
+    return;
+  }
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader(
     "Content-Disposition",
-    `attachment; filename="elo-${req.query.type}.csv"`,
+    `attachment; filename="catapimba-${req.query.type}.csv"`,
   );
   res.send(
     "\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n"),

@@ -1,5 +1,5 @@
 import { SearchSelect } from "../../components/inputs/search-select";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { Command, Project, WorkspaceData } from "./types";
 import { Card, Empty, InputField, SaveButton } from "./ui";
 
@@ -26,6 +26,11 @@ export function ProjectsModule({
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState("");
   const [year, setYear] = useState("");
+  const [semester, setSemester] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [mentorId, setMentorId] = useState("");
+  const [sortBy, setSortBy] = useState("created");
+  const [page, setPage] = useState(1);
   const [showArchived, setShowArchived] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
@@ -80,17 +85,37 @@ export function ProjectsModule({
   const eligible = data.memberships.filter(
     (m) => m.status === "active" && m.roles.includes(kind),
   );
-  const filtered = data.projects.filter(
-    (p) =>
-      (showArchived || !p.archived) &&
-      (!stage || p.stage === stage) &&
-      (!year || p.year === Number(year)) &&
-      `${p.name} ${p.summary} ${p.category}`
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-  );
   const name = (id: string) =>
     data.people.find((p) => p.id === id)?.name ?? "Pessoa vinculada";
+  const filtered = data.projects
+    .filter((p) => {
+      const projectPeople = data.participants
+        .filter((participant) => participant.project_id === p.id)
+        .map((participant) => name(participant.user_id))
+        .join(" ");
+      return (showArchived || !p.archived) &&
+        (!stage || p.stage === stage) &&
+        (!year || p.year === Number(year)) &&
+        (!semester || p.semester === Number(semester)) &&
+        (!studentId || data.participants.some((participant) => participant.project_id === p.id && participant.user_id === studentId && participant.kind === "student")) &&
+        (!mentorId || data.participants.some((participant) => participant.project_id === p.id && participant.user_id === mentorId && participant.kind === "mentor")) &&
+        `${p.name} ${p.summary} ${p.category} ${projectPeople}`
+          .toLocaleLowerCase("pt-BR")
+          .includes(search.toLocaleLowerCase("pt-BR"));
+    })
+    .sort((a, b) => sortBy === "name"
+      ? a.name.localeCompare(b.name, "pt-BR")
+      : sortBy === "year"
+        ? b.year - a.year || b.semester - a.semester || a.name.localeCompare(b.name, "pt-BR")
+        : sortBy === "semester"
+          ? b.year - a.year || b.semester - a.semester
+          : b.created_at.localeCompare(a.created_at));
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const visibleProjects = filtered.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => {
+    setPage(1);
+  }, [search, stage, year, semester, studentId, mentorId, sortBy, showArchived]);
   return (
     <>
       <Card>
@@ -131,6 +156,22 @@ export function ProjectsModule({
                 ))}
             </select>
           </InputField>
+          <InputField label="Semestre">
+            <select value={semester} onChange={(e) => setSemester(e.target.value)}>
+              <option value="">Todos</option>
+              <option value="1">1º semestre</option>
+              <option value="2">2º semestre</option>
+            </select>
+          </InputField>
+          <InputField label="Aluno">
+            <select value={studentId} onChange={(e) => setStudentId(e.target.value)}>
+              <option value="">Todos os alunos</option>
+              {Array.from(new Set(data.participants.filter((participant) => participant.kind === "student").map((participant) => participant.user_id)))
+                .map((id) => ({ id, name: name(id) }))
+                .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+                .map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
+            </select>
+          </InputField>
           <label className="workspace-check">
             <input
               type="checkbox"
@@ -156,7 +197,7 @@ export function ProjectsModule({
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
+              {visibleProjects.map((p) => (
                 <tr
                   key={p.id}
                   className={selectedId === p.id ? "selected" : ""}
@@ -213,6 +254,17 @@ export function ProjectsModule({
             </tbody>
           </table>
         </div>
+        {filtered.length > pageSize && (
+          <nav className="workspace-actions" aria-label="Paginação dos projetos">
+            <button className="btn btn-ghost" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+              Página anterior
+            </button>
+            <span aria-live="polite">Página {page} de {pageCount} · {filtered.length} projetos</span>
+            <button className="btn btn-ghost" disabled={page >= pageCount} onClick={() => setPage((current) => Math.min(pageCount, current + 1))}>
+              Próxima página
+            </button>
+          </nav>
+        )}
         {!filtered.length && (
           <Empty>
             {data.projects.length

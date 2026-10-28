@@ -57,7 +57,7 @@ python3 scripts/podium-browser.py
 pnpm check:deployment https://FRONTEND https://API
 ```
 
-Os testes HTTP e de navegador usam fixtures, não sessões reais. Os testes de navegador exigem Playwright/Chromium e um preview Vite local. Os SQL usam transações com rollback. Consulte [permissões e uso](docs/workspace.md), [configuração Supabase](docs/setup-supabase.md) e [implantação](docs/deployment.md).
+Os testes HTTP e de navegador usam fixtures, não sessões reais. Os testes de navegador exigem Playwright/Chromium e um preview Vite local. Os SQL usam transações com rollback. Consulte [permissões e uso](docs/workspace.md), [relatórios e Excel](docs/reporting.md), [configuração Supabase](docs/setup-supabase.md) e [implantação](docs/deployment.md).
 
 ## Premiação
 

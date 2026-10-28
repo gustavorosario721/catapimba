@@ -31,6 +31,9 @@ export function ResultsModule({
       setEventId(requested);
   }, [requested]);
   const [query, setQuery] = useState("");
+  const [exportYear, setExportYear] = useState("");
+  const [exportSemester, setExportSemester] = useState("");
+  const [exportStudent, setExportStudent] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
   const result =
@@ -44,8 +47,15 @@ export function ResultsModule({
     setDownloading(true);
     setError("");
     try {
+      const params = new URLSearchParams({ type, format: "xlsx" });
+      if (type === "results" && result) params.set("event", result.event_id);
+      if (type === "projects") {
+        if (exportYear) params.set("year", exportYear);
+        if (exportSemester) params.set("semester", exportSemester);
+        if (exportStudent) params.set("student", exportStudent);
+      }
       const response = await apiFetch(
-        `/api/workspace/${institutionId}/export?type=${type}${type === "results" ? `&event=${result?.event_id ?? ""}` : ""}`,
+        `/api/workspace/${institutionId}/export?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
       );
       if (!response.ok)
@@ -54,7 +64,7 @@ export function ResultsModule({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `catapimba-${type}.csv`;
+      link.download = `catapimba-${type}.xlsx`;
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (reason) {
@@ -90,24 +100,49 @@ export function ResultsModule({
         )}
         {downloading && <p role="status">Preparando arquivo…</p>}
         {mode === "reports" && (
-          <div className="workspace-actions">
-            <button
-              className="btn btn-primary"
-              disabled={downloading}
-              onClick={() => download("projects")}
-            >
-              Exportar portfólio autorizado (CSV)
-            </button>
-            {result && (
-              <button
-                className="btn btn-ghost"
-                disabled={downloading}
-                onClick={() => download("results")}
-              >
-                Exportar resultado desta banca (CSV)
+          <>
+            <h3>Filtros do portfólio</h3>
+            <div className="workspace-filters">
+              <InputField label="Ano">
+                <select value={exportYear} onChange={(event) => setExportYear(event.target.value)}>
+                  <option value="">Todos os anos</option>
+                  {Array.from(new Set(data.projects.map((project) => project.year))).sort((a, b) => b - a).map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </InputField>
+              <InputField label="Semestre">
+                <select value={exportSemester} onChange={(event) => setExportSemester(event.target.value)}>
+                  <option value="">Todos</option>
+                  <option value="1">1º semestre</option>
+                  <option value="2">2º semestre</option>
+                </select>
+              </InputField>
+              <InputField label="Aluno">
+                <SearchSelect
+                  label="Filtrar por aluno"
+                  value={exportStudent}
+                  onChange={setExportStudent}
+                  options={[
+                    { value: "", label: "Todos os alunos" },
+                    ...Array.from(new Set(data.participants.filter((participant) => participant.kind === "student").map((participant) => participant.user_id)))
+                      .map((id) => ({ value: id, label: data.people.find((person) => person.id === id)?.name ?? "Aluno" }))
+                      .sort((a, b) => a.label.localeCompare(b.label, "pt-BR")),
+                  ]}
+                />
+              </InputField>
+            </div>
+            <div className="workspace-actions">
+              <button className="btn btn-primary" disabled={downloading} onClick={() => download("projects")}>
+                Exportar portfólio filtrado (.xlsx)
               </button>
-            )}
-          </div>
+              {result && (
+                <button className="btn btn-ghost" disabled={downloading} onClick={() => download("results")}>
+                  Exportar resultado desta banca (.xlsx)
+                </button>
+              )}
+            </div>
+          </>
         )}
         {!data.results.length ? (
           <Empty>Ainda não há resultados disponíveis para seu perfil</Empty>
