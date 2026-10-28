@@ -43,7 +43,7 @@ const legacyRoutes: Record<string, string> = {
 export default function App() {
   const [path] = useLocation();
   useEffect(() => {
-    document.title = "Catapimba · Gestão e avaliação de projetos";
+    document.title = "Nexus · Gestão e avaliação de projetos";
     // Announce route changes to keyboard and screen-reader users.
     document.querySelector<HTMLElement>("main h1")?.focus();
     window.scrollTo({ top: 0 });
