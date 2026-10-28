@@ -265,8 +265,8 @@ workspaceRouter.get("/workspace/:institutionId/export", async (req, res) => {
     const hasFilters = year !== null || semester !== null || requestedStudent !== "";
     const resultRows = !hasFilters ? event.rows : event.rows.filter((row: Record<string, unknown>) => {
       const project = data.projects.find((candidate: Record<string, unknown>) => candidate.id === row.id);
-      return Boolean(project) &&
-        (year === null || project.year === year) &&
+      if (!project) return false;
+      return (year === null || project.year === year) &&
         (semester === null || project.semester === semester) &&
         (!requestedStudent || (allowedStudentIds.has(requestedStudent) &&
           (Array.isArray(data.participants) ? data.participants : []).some((participant: { project_id: string; user_id: string; kind: string }) =>
