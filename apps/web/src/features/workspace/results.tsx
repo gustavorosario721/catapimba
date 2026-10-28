@@ -49,11 +49,9 @@ export function ResultsModule({
     try {
       const params = new URLSearchParams({ type, format: "xlsx" });
       if (type === "results" && result) params.set("event", result.event_id);
-      if (type === "projects") {
-        if (exportYear) params.set("year", exportYear);
-        if (exportSemester) params.set("semester", exportSemester);
-        if (exportStudent) params.set("student", exportStudent);
-      }
+      if (exportYear) params.set("year", exportYear);
+      if (exportSemester) params.set("semester", exportSemester);
+      if (exportStudent) params.set("student", exportStudent);
       const response = await apiFetch(
         `/api/workspace/${institutionId}/export?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
@@ -73,19 +71,25 @@ export function ResultsModule({
       setDownloading(false);
     }
   }
-  const rows =
-    result?.rows.filter((r) =>
-      r.name.toLowerCase().includes(query.toLowerCase()),
-    ) ?? [];
+  const filteredProjects = data.projects.filter((project) =>
+    (!exportYear || project.year === Number(exportYear)) &&
+    (!exportSemester || project.semester === Number(exportSemester)) &&
+    (!exportStudent || data.participants.some((participant) =>
+      participant.project_id === project.id &&
+      participant.user_id === exportStudent &&
+      participant.kind === "student"))
+  );
+  const filteredProjectIds = new Set(filteredProjects.map((project) => project.id));
+  const hasPortfolioFilters = Boolean(exportYear || exportSemester || exportStudent);
+  const rows = result?.rows.filter((r) =>
+    (!hasPortfolioFilters || filteredProjectIds.has(r.id)) &&
+    r.name.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR"))
+  ) ?? [];
   return (
     <>
       <Card>
         <h2 className="section-title">
-          {mode === "podium"
-            ? "Pódio de premiação"
-            : mode === "reports"
-              ? "Relatórios e exportação"
-              : "Resultados e classificação"}
+          {mode === "podium" ? "Pódio de premiação" : "Resultados e relatórios"}
         </h2>
         <p>
           Média ponderada pelos critérios de cada avaliação e média entre
@@ -99,9 +103,10 @@ export function ResultsModule({
           </p>
         )}
         {downloading && <p role="status">Preparando arquivo…</p>}
-        {mode === "reports" && (
+        {mode !== "podium" && (
           <>
-            <h3>Filtros do portfólio</h3>
+            <h3>Projetos e relatórios</h3>
+            <p>Os filtros abaixo atualizam a lista de projetos, a classificação exibida e o arquivo Excel.</p>
             <div className="workspace-filters">
               <InputField label="Ano">
                 <select value={exportYear} onChange={(event) => setExportYear(event.target.value)}>
@@ -133,15 +138,35 @@ export function ResultsModule({
               </InputField>
             </div>
             <div className="workspace-actions">
-              <button className="btn btn-primary" disabled={downloading} onClick={() => download("projects")}>
-                Exportar portfólio filtrado (.xlsx)
-              </button>
-              {result && (
-                <button className="btn btn-ghost" disabled={downloading} onClick={() => download("results")}>
-                  Exportar resultado desta banca (.xlsx)
-                </button>
+              {data.capabilities.manageEvents && (
+                <>
+                  <button className="btn btn-primary" disabled={downloading} onClick={() => download("projects")}>
+                    Exportar portfólio filtrado (.xlsx)
+                  </button>
+                  {result && (
+                    <button className="btn btn-ghost" disabled={downloading} onClick={() => download("results")}>
+                      Exportar resultado desta banca (.xlsx)
+                    </button>
+                  )}
+                </>
               )}
             </div>
+            <div className="table-wrap" tabIndex={0} role="region" aria-label="Projetos filtrados">
+              <table>
+                <thead><tr><th>Projeto</th><th>Etapa</th><th>Ciclo</th><th>Equipe</th></tr></thead>
+                <tbody>
+                  {filteredProjects.map((project) => (
+                    <tr key={project.id}>
+                      <td>{project.name}</td>
+                      <td>{project.stage}</td>
+                      <td>{project.year}.{project.semester}</td>
+                      <td>{data.participants.filter((participant) => participant.project_id === project.id).map((participant) => data.people.find((person) => person.id === participant.user_id)?.name ?? "Pessoa vinculada").join(", ") || "Sem integrantes"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {!filteredProjects.length && <Empty>Nenhum projeto corresponde aos filtros selecionados.</Empty>}
           </>
         )}
         {!data.results.length ? (

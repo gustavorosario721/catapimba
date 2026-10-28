@@ -75,6 +75,20 @@ do $$ begin if not (jsonb_array_length(public.workspace_read('92000000-0000-0000
 do $$ begin if not ((public.workspace_read('92000000-0000-0000-0000-000000000001')->'results'->0->'rows'->0->>'score')::numeric=4) then raise exception 'Frozen weighted score incorrect'; end if; end $$;
 do $$ begin if not ((public.workspace_read('92000000-0000-0000-0000-000000000001')->'results'->0->'rows'->1->>'position')::integer=1) then raise exception 'Tie rank incorrect'; end if; end $$;
 select public.workspace_command('92000000-0000-0000-0000-000000000001','event.status',jsonb_build_object('id',current_setting('test.event'),'status','closed'));
+do $ begin
+  begin
+    perform public.workspace_command('92000000-0000-0000-0000-000000000001','project.save',
+      jsonb_build_object('id',current_setting('test.p1'),'name','Alteração após encerramento','summary','x'));
+    raise exception 'Closed project edit unexpectedly allowed';
+  exception when sqlstate '55000' then null;
+  end;
+  begin
+    perform public.workspace_command('92000000-0000-0000-0000-000000000001','project.team',
+      jsonb_build_object('id',current_setting('test.p1'),'user_id','91000000-0000-0000-0000-000000000003','kind','mentor','remove',true));
+    raise exception 'Closed project team edit unexpectedly allowed';
+  exception when sqlstate '55000' then null;
+  end;
+end $;
 select public.workspace_command('92000000-0000-0000-0000-000000000001','event.publish',jsonb_build_object('id',current_setting('test.event'),'published',true));
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"91000000-0000-0000-0000-000000000004","role":"authenticated"}',true);
