@@ -1,5 +1,5 @@
 import { SearchSelect } from "../../components/inputs/search-select";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { Command, WorkspaceData } from "./types";
 import { Card, Empty, InputField, SaveButton, score, dateTime } from "./ui";
 
@@ -8,13 +8,26 @@ export function EvaluationsModule({
   command,
   busy,
   userId,
+  initialEventId,
+  simplified = false,
 }: {
   data: WorkspaceData;
   command: Command;
   busy: boolean;
   userId: string;
+  initialEventId?: string;
+  simplified?: boolean;
 }) {
-  const [eventId, setEventId] = useState("");
+  const [eventId, setEventId] = useState(initialEventId ?? "");
+  useEffect(() => {
+    if (initialEventId) {
+      setEventId(initialEventId);
+      setProjectId("");
+      setScores({});
+      setNotes("");
+      setReceipt("");
+    }
+  }, [initialEventId]);
   const [projectId, setProjectId] = useState("");
   const [scores, setScores] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState("");
@@ -68,6 +81,8 @@ export function EvaluationsModule({
         </p>
         {!assigned.length ? (
           <Empty>Nenhuma banca atribuída a você</Empty>
+        ) : simplified && !event ? (
+          <Empty>Esta banca não está atribuída à sua conta de avaliador ou não está disponível. Confirme se entrou com a conta cadastrada e se a coordenação atribuiu você à banca.</Empty>
         ) : (
           <>
             <InputField label="Banca para avaliar">
@@ -163,7 +178,7 @@ export function EvaluationsModule({
           </>
         )}
       </Card>
-      <Card>
+      {!simplified && <Card>
         <h2 className="section-title">Comprovantes e histórico</h2>
         {data.evaluations
           .filter((e) => e.evaluator_id === userId)
@@ -187,7 +202,7 @@ export function EvaluationsModule({
         {!data.evaluations.some((e) => e.evaluator_id === userId) && (
           <Empty>Nenhuma avaliação enviada</Empty>
         )}
-      </Card>
+      </Card>}
     </>
   );
 }
