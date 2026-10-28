@@ -68,6 +68,9 @@ export function WorkspaceApp({
   const [institutionId, setInstitutionId] = useState(directInstitutionId);
   const [demoModeActive, setDemoModeActive] = useState(false);
   const [scope, setScope] = useState<WorkspaceData | null>(null);
+  useEffect(() => {
+    if (scope?.institution.id === institutionId) setDemoModeActive(Boolean(scope.demoRole));
+  }, [scope, institutionId]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
