@@ -14,7 +14,7 @@ export function Logo() {
       <span className="brand-mark" aria-hidden="true">
         <Layers3 size={21} />
       </span>
-      Catapimba
+      Nexus
       <span className="brand-dot" aria-hidden="true">
         .
       </span>
@@ -25,7 +25,7 @@ export function Logo() {
 export function PublicHeader() {
   return (
     <header className="public-nav">
-      <Link href="/" aria-label="Catapimba, página inicial">
+      <Link href="/" aria-label="Nexus, página inicial">
         <Logo />
       </Link>
       <Link href="/login" className="btn btn-ghost">
