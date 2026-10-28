@@ -39,8 +39,13 @@ export function ProjectsModule({
   const [kind, setKind] = useState<"student" | "mentor">("student");
   const selected = data.projects.find((p) => p.id === selectedId);
   const manager = data.capabilities.manageProjects;
+  const projectLocked = Boolean(selected && data.eventProjects.some((item) =>
+    item.project_id === selected.id && data.events.some((event) =>
+      event.id === item.event_id && event.status === "closed"
+    )
+  ));
   const canEdit =
-    manager ||
+    !projectLocked && (manager ||
     Boolean(
       selected &&
       data.participants.some(
@@ -52,7 +57,7 @@ export function ProjectsModule({
       data.memberships.some(
         (m) => m.user_id === userId && m.roles.includes("student"),
       ),
-    );
+    ));
   function edit(project?: Project) {
     setEditing(project?.id ?? "new");
     setPersonId("");
@@ -388,6 +393,7 @@ export function ProjectsModule({
                 </button>
               )}
             </div>
+            {projectLocked && <p className="notice" role="status">Este projeto está bloqueado para edição porque já pertence a uma banca encerrada. Os dados e integrantes foram congelados para preservar o resultado.</p>}
             <p style={{ whiteSpace: "pre-wrap" }}>{selected.summary}</p>
             <p>
               {selected.category} · {selected.stage} · {selected.year}.
@@ -405,7 +411,7 @@ export function ProjectsModule({
                   {manager && (
                     <button
                       className="btn btn-ghost"
-                      disabled={busy}
+                      disabled={busy || projectLocked}
                       onClick={() =>
                         command("project.team", {
                           id: selected.id,
@@ -420,7 +426,7 @@ export function ProjectsModule({
                   )}
                 </div>
               ))}
-            {manager && (
+            {manager && !projectLocked && (
               <form
                 className="workspace-form"
                 onSubmit={(e) => {
