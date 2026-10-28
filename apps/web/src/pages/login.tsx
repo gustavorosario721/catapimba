@@ -43,7 +43,7 @@ export default function LoginPage({
   return (
     <div className="login-page">
       <header className="login-header">
-        <Link href="/" aria-label="Catapimba, página inicial">
+        <Link href="/" aria-label="Nexus, página inicial">
           <Logo />
         </Link>
         <Link href="/" className="back-link">
@@ -64,7 +64,7 @@ export default function LoginPage({
               ? "Só mais um instante."
               : hasSession
                 ? "Sua conta, seu espaço."
-                : "Acesse o Catapimba"}
+                : "Acesse o Nexus"}
           </h1>
           <p className="login-description">
             {mode === "callback"
