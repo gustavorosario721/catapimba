@@ -103,7 +103,7 @@ export function ResultsModule({
           </p>
         )}
         {downloading && <p role="status">Preparando arquivo…</p>}
-        {mode !== "podium" && (
+        {mode !== "podium" && data.capabilities.manageEvents && (
           <>
             <h3>Projetos e relatórios</h3>
             <p>Os filtros abaixo atualizam a lista de projetos, a classificação exibida e o arquivo Excel.</p>
