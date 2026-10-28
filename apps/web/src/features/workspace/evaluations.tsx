@@ -19,6 +19,10 @@ export function EvaluationsModule({
   simplified?: boolean;
 }) {
   const [eventId, setEventId] = useState(initialEventId ?? "");
+  const [projectId, setProjectId] = useState("");
+  const [scores, setScores] = useState<Record<string, number>>({});
+  const [notes, setNotes] = useState("");
+  const [receipt, setReceipt] = useState("");
   useEffect(() => {
     if (initialEventId) {
       setEventId(initialEventId);
@@ -28,10 +32,6 @@ export function EvaluationsModule({
       setReceipt("");
     }
   }, [initialEventId]);
-  const [projectId, setProjectId] = useState("");
-  const [scores, setScores] = useState<Record<string, number>>({});
-  const [notes, setNotes] = useState("");
-  const [receipt, setReceipt] = useState("");
   const assigned = data.events.filter(
     (ev) =>
       data.eventEvaluators.some(
@@ -85,30 +85,34 @@ export function EvaluationsModule({
           <Empty>Esta banca não está atribuída à sua conta de avaliador ou não está disponível. Confirme se entrou com a conta cadastrada e se a coordenação atribuiu você à banca.</Empty>
         ) : (
           <>
-            <InputField label="Banca para avaliar">
-              <SearchSelect
-                label="Banca para avaliar"
-                value={eventId}
-                disabled={busy}
-                onChange={(id) => {
-                  setEventId(id);
-                  setProjectId("");
-                  setScores({});
-                  setNotes("");
-                  setReceipt("");
-                }}
-                options={assigned.map((event) => ({
-                  value: event.id,
-                  label: event.name,
-                  description:
-                    event.status === "open"
-                      ? "Aberta para avaliações"
-                      : event.status === "draft"
-                        ? "Em preparação"
-                        : "Encerrada · consulta",
-                }))}
-              />
-            </InputField>
+            {!simplified ? (
+              <InputField label="Banca para avaliar">
+                <SearchSelect
+                  label="Banca para avaliar"
+                  value={eventId}
+                  disabled={busy}
+                  onChange={(id) => {
+                    setEventId(id);
+                    setProjectId("");
+                    setScores({});
+                    setNotes("");
+                    setReceipt("");
+                  }}
+                  options={assigned.map((event) => ({
+                    value: event.id,
+                    label: event.name,
+                    description:
+                      event.status === "open"
+                        ? "Aberta para avaliações"
+                        : event.status === "draft"
+                          ? "Em preparação"
+                          : "Encerrada · consulta",
+                  }))}
+                />
+              </InputField>
+            ) : (
+              <p><strong>Banca:</strong> {event?.name ?? "Validando banca"}</p>
+            )}
             {event && (
               <InputField label="Projeto para avaliar">
                 <SearchSelect
