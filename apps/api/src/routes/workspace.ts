@@ -198,7 +198,8 @@ workspaceRouter.get("/workspace/:institutionId/export", async (req, res) => {
   if (!identity) return;
   if (
     !uuid.test(String(req.params.institutionId)) ||
-    !["projects", "results"].includes(String(req.query.type))
+    !["projects", "results"].includes(String(req.query.type)) ||
+    (req.query.format !== undefined && !["csv", "xlsx"].includes(String(req.query.format)))
   ) {
     res.status(400).json({ error: "Exportação inválida." });
     return;
