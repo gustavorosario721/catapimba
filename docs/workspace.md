@@ -26,7 +26,7 @@ No celular, use **Abrir menu** no cabeçalho para ver todos os módulos permitid
 | Avaliador | Consulta projetos e bancas atribuídos, envia/revisa suas avaliações enquanto abertas |
 | Aluno | Consulta projetos vinculados e altera somente sua descrição; consulta resultados publicados |
 
-Um vínculo suporta vários papéis. A mesma conta pode participar de várias instituições. Suspensão da instituição ou vínculo bloqueia novas operações. Resultados publicados são visíveis aos membros ativos da instituição inteira, sem conceder acesso aos detalhes dos projetos de outras equipes.
+Cada vínculo institucional possui exatamente um papel real; a mesma conta pode ter papéis diferentes em instituições diferentes. Se uma migração encontrar vários papéis em um vínculo, ela registra a lista anterior em uma tabela privada de auditoria e conserva o papel de maior privilégio na ordem Administrador institucional, Coordenador, Avaliador, Orientador e Aluno. A conta de apresentação explicitamente allowlisted pode ativar um papel de demonstração por sessão e instituição; a autorização é verificada no banco em cada operação, o contexto é auditado e os privilégios globais de superadministrador ficam suspensos durante a demonstração. Suspensão da instituição ou vínculo bloqueia novas operações. Resultados publicados são visíveis aos membros ativos da instituição inteira, sem conceder acesso aos detalhes dos projetos de outras equipes.
 
 ## Cálculo e ciclo das bancas
 
@@ -48,7 +48,8 @@ O aviso de RLS sem política em `private.audit_events` é intencional: acesso di
 
 - `pnpm run build:web` e `pnpm run build:api`: tipos e builds separados.
 - `pnpm test:routing`: 17 testes HTTP, com Supabase simulado para validação de transporte, erros, identidade encaminhada, exportação e regressões de roteamento.
-- `supabase/tests/workspace.sql`: testes SQL no PostgreSQL real em transação com rollback. Cobrem aprovação, papéis institucionais, isolamento, SELECT direto com RLS, edição restrita de aluno, pesos congelados, notas inválidas, envio duplicado, encerramento, publicação, empates, suspensão e auditoria.
+- `supabase/tests/workspace.sql`: testes SQL no PostgreSQL real em transação com rollback.
+- `supabase/tests/single-role-demo.sql`: cardinalidade de um papel por vínculo, troca temporária allowlisted, restauração do papel real e bloqueio de alternância para contas não autorizadas. Cobrem aprovação, papéis institucionais, isolamento, SELECT direto com RLS, edição restrita de aluno, pesos congelados, notas inválidas, envio duplicado, encerramento, publicação, empates, suspensão e auditoria.
 - `supabase/tests/platform-institutions.sql`: administração global sem vínculo e concessão controlada/revogação.
 - `scripts/workspace-browser.py`: testes opcionais com Python Playwright e Chromium em `/usr/bin/chromium`, contra `vite preview` na porta 5173. Fixtures e sessão simulada ficam exclusivamente nesse teste, sem conexão ao banco. Cobrem os seis perfis, rotas antigas, páginas públicas, carregamento/erros, saída da sessão, solicitação de acesso, filtros vazios, formulários, confirmação por teclado, resultados, exportação, navegação móvel e responsividade. Não substituem OAuth Google real nem a homologação dos fluxos com contas institucionais.
 
