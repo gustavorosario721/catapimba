@@ -7,13 +7,13 @@ create unique index evaluation_criteria_one_tiebreaker_per_institution
 
 create function private.clear_inactive_tiebreaker()
 returns trigger
-language plpgsql security definer set search_path = '' as $
+language plpgsql security definer set search_path = '' as $$
 begin
   if not new.active then
     new.is_tiebreaker := false;
   end if;
   return new;
-end $;
+end $$;
 
 create trigger clear_inactive_tiebreaker
 before update of active on public.evaluation_criteria
