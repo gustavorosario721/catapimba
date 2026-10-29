@@ -9,6 +9,7 @@ const actions = new Set([
   "project.save",
   "project.team",
   "criterion.save",
+  "criterion.tiebreaker",
   "event.save",
   "event.status",
   "event.publish",
@@ -111,6 +112,25 @@ workspaceRouter.post("/workspace/:institutionId/commands", async (req, res) => {
     Array.isArray(body.data)
   ) {
     res.status(400).json({ error: "Operação ou dados inválidos." });
+    return;
+  }
+  if (body.action === "criterion.tiebreaker") {
+    if (
+      Object.keys(body.data).length !== 1 ||
+      !uuid.test(String(body.data.id ?? ""))
+    ) {
+      res.status(400).json({ error: "Critério de desempate inválido." });
+      return;
+    }
+    const { data, error } = await identity.client.rpc("workspace_set_tiebreaker", {
+      p_institution: req.params.institutionId,
+      p_criterion: body.data.id,
+    });
+    if (error) {
+      failure(res, error);
+      return;
+    }
+    res.json(data);
     return;
   }
   const { data, error } = await identity.client.rpc("workspace_command", {
