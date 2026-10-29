@@ -5,6 +5,21 @@ create unique index evaluation_criteria_one_tiebreaker_per_institution
   on public.evaluation_criteria(institution_id)
   where is_tiebreaker;
 
+create function private.clear_inactive_tiebreaker()
+returns trigger
+language plpgsql security definer set search_path = '' as $
+begin
+  if not new.active then
+    new.is_tiebreaker := false;
+  end if;
+  return new;
+end $;
+
+create trigger clear_inactive_tiebreaker
+before update of active on public.evaluation_criteria
+for each row execute function private.clear_inactive_tiebreaker();
+
+
 create function private.workspace_set_tiebreaker(
   p_institution uuid,
   p_criterion uuid
