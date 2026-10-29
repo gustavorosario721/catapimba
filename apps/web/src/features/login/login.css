@@ -409,20 +409,6 @@ kbd {
   color: var(--ink);
   font-size: 1rem;
 }
-.concierge-actions {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-top: 16px;
-}
-.concierge-actions .btn {
-  font-size: 0.73rem;
-  padding: 9px 10px;
-}
-.concierge-actions > a {
-  font-size: 0.75rem;
-}
 .ui-tooltip {
   max-width: 250px;
   background: var(--navy);
