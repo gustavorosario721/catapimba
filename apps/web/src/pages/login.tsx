@@ -5,7 +5,6 @@ import { ArrowLeft, ArrowRight, ShieldCheck, AlertCircle } from "lucide-react";
 import { Logo, LoadingState } from "../components/app-ui";
 import { Button } from "../components/ui/button";
 import { useAccessibility } from "../features/accessibility/AccessibilityProvider";
-import { ConciergeChat } from "../features/login/ConciergeChat";
 export type LoginProps = {
   mode: "login" | "callback" | "account";
   hasSession: boolean;
@@ -151,9 +150,6 @@ export default function LoginPage({
               <Link href="/recuperar-senha">Preciso de ajuda</Link>
             </div>
           </div>
-          {mode !== "callback" && (
-            <ConciergeChat onFocusLogin={() => loginButton.current?.focus()} />
-          )}
         </motion.section>
       </main>
     </div>
