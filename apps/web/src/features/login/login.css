@@ -107,7 +107,7 @@
   --surface: #243237;
   --mint-soft: #2c4540;
 }
-:root[data-calm="true"] :is(.card, .login-access-card, .concierge-content) {
+:root[data-calm="true"] :is(.card, .login-access-card) {
   padding: 28px;
 }
 :root[data-calm="true"] :is(p, li) {
@@ -398,105 +398,6 @@ kbd {
   margin-top: 24px;
   font-size: 0.76rem;
 }
-.concierge {
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  margin-top: 20px;
-  background: var(--surface);
-  overflow: hidden;
-}
-.concierge-trigger {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 18px;
-  color: var(--ink);
-  background: transparent;
-  border: 0;
-  text-align: left;
-  min-height: 72px;
-}
-.concierge-trigger > span:nth-child(2) {
-  flex: 1;
-}
-.concierge-trigger strong {
-  display: block;
-  font-size: 0.88rem;
-}
-.concierge-trigger small {
-  display: block;
-  font-size: 0.74rem;
-  color: var(--muted);
-  margin-top: 3px;
-}
-.concierge-avatar {
-  width: 37px;
-  height: 37px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: var(--mint-soft);
-  color: var(--emerald);
-  flex-shrink: 0;
-}
-.concierge-open {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: var(--emerald);
-}
-.concierge-content {
-  padding: 0 18px 20px;
-}
-.concierge-content > p {
-  font-size: 0.78rem;
-  line-height: 1.7;
-  margin: 4px 0 15px;
-}
-.concierge-topics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-.concierge-topics .btn {
-  font-size: 0.74rem;
-  padding: 8px 10px;
-  min-height: 44px;
-}
-.concierge-transcript {
-  max-height: 310px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
-}
-.chat-message {
-  font-size: 0.85rem;
-  line-height: 1.8;
-  padding: 12px 15px;
-  border-radius: 13px;
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-.chat-message.assistant {
-  background: var(--surface-soft);
-  border: 1px solid var(--border);
-  color: var(--ink);
-}
-.chat-message.user {
-  background: var(--mint-soft);
-  color: var(--ink);
-  align-self: flex-end;
-}
-.concierge-form {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-}
 .ui-input {
   width: 100%;
   min-width: 0;
@@ -559,9 +460,6 @@ kbd {
   .login-access-card .auth-links {
     font-size: 0.76rem;
   }
-  .concierge-form .ui-input {
-    font-size: 16px;
-  }
 }
 @media (prefers-reduced-motion: no-preference) {
   :root:not([data-reduced-motion="true"])
@@ -572,7 +470,6 @@ kbd {
       .sidebar,
       .login-page,
       .login-access-card,
-      .concierge,
       .btn
     ) {
     transition:
