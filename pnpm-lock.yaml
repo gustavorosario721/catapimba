@@ -171,9 +171,6 @@ importers:
       '@workspace/db':
         specifier: workspace:*
         version: link:../../packages/db
-      ai:
-        specifier: 7.0.153
-        version: 7.0.153(zod@4.6.5)
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
