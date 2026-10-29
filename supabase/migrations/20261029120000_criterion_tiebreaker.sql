@@ -130,4 +130,4 @@ revoke all on function private.workspace_set_tiebreaker(uuid, uuid),
   public.workspace_set_tiebreaker(uuid, uuid)
 from public, anon, authenticated;
 
-grant execute on function public.workspace_set_tiebreaker(uuid, uuid) to authenticated;
+grant execute on function private.workspace_set_tiebreaker(uuid, uuid), public.workspace_set_tiebreaker(uuid, uuid) to authenticated;
