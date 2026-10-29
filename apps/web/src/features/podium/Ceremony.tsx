@@ -3,8 +3,6 @@ import { motion } from "framer-motion";
 import {
   Check,
   ChevronRight,
-  Maximize,
-  Minimize,
   Music2,
   Pause,
   Play,
@@ -49,7 +47,6 @@ export default function Ceremony({
     [loadingMusic, setLoadingMusic] = useState(false),
     [volume, setVolume] = useState(25);
   const [confetti, setConfetti] = useState(true),
-    [fullscreen, setFullscreen] = useState(false),
     [error, setError] = useState("");
   const sound = useRef<CeremonyMusic | null>(null);
   const alive = useRef(true);
@@ -58,15 +55,10 @@ export default function Ceremony({
     alive.current = true;
     const element = dialog.current;
     if (!element?.open) element?.showModal();
-    const change = () => setFullscreen(document.fullscreenElement === element);
-    document.addEventListener("fullscreenchange", change);
     return () => {
       alive.current = false;
       sound.current?.dispose();
       sound.current = null;
-      document.removeEventListener("fullscreenchange", change);
-      if (document.fullscreenElement === element)
-        void document.exitFullscreen().catch(() => {});
     };
   }, []);
   useEffect(() => {
@@ -136,22 +128,6 @@ export default function Ceremony({
     setMusic(false);
     setError("");
     clock.replay();
-  }
-  async function toggleFullscreen() {
-    try {
-      if (document.fullscreenElement === dialog.current)
-        await document.exitFullscreen();
-      else if (dialog.current?.requestFullscreen)
-        await dialog.current.requestFullscreen();
-      else
-        setError(
-          "Tela cheia indisponível neste navegador. A apresentação continua nesta janela.",
-        );
-    } catch {
-      setError(
-        "Não foi possível abrir em tela cheia. A apresentação continua nesta janela.",
-      );
-    }
   }
   const celebrate =
     !reduceMotion &&
@@ -385,14 +361,6 @@ export default function Ceremony({
                 />
               </label>
             )}
-            <Button
-              variant="ghost"
-              onClick={toggleFullscreen}
-              aria-pressed={fullscreen}
-            >
-              {fullscreen ? <Minimize size={16} /> : <Maximize size={16} />}{" "}
-              {fullscreen ? "Sair da tela cheia" : "Tela cheia"}
-            </Button>
             <Button
               variant="ghost"
               onClick={() => update({ calm: !preferences.calm })}
