@@ -56,6 +56,7 @@ export const auditNames: Record<string, string> = {
   "project.save": "Projeto atualizado",
   "project.team": "Equipe atualizada",
   "criterion.save": "Critério atualizado",
+  "criterion.tiebreaker": "Critério prioritário de desempate alterado",
   "event.save": "Banca atualizada",
   "event.status": "Situação da banca alterada",
   "event.publish": "Publicação de resultados alterada",
