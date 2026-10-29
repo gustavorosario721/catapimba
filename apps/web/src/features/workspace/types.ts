@@ -62,6 +62,7 @@ export type Criterion = {
   weight: number;
   descriptors: string[];
   active: boolean;
+  is_tiebreaker: boolean;
 };
 export type Event = {
   id: string;
