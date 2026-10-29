@@ -30,7 +30,7 @@ Cada vínculo institucional possui exatamente um papel real; a mesma conta pode 
 
 ## Cálculo e ciclo das bancas
 
-Cada avaliação usa `soma(nota × peso) / soma(pesos)`. O resultado do projeto é a média entre as avaliações, arredondada a quatro casas para classificação. Empates compartilham a posição (`dense_rank`); a interface mostra duas casas. Não há desempate automático. Antes do encerramento os resultados são parciais e restritos à gestão.
+Cada avaliação usa `soma(nota × peso) / soma(pesos)`. O resultado do projeto é a média entre as avaliações, arredondada a quatro casas para classificação. Se a gestão institucional definir um critério ativo como prioritário, empates na média final são resolvidos pela maior média nesse critério; a escolha fica congelada no momento em que a banca é aberta. Se também houver empate no critério prioritário, os projetos compartilham a posição (`dense_rank`). A interface mostra duas casas. Antes do encerramento os resultados são parciais e restritos à gestão.
 
 Abrir a banca congela critérios, descritores e pesos. Alterar o cadastro de critérios depois não muda avaliações daquela banca. Projetos e avaliadores só são editados durante a preparação. Cancelamento preserva os registros e não gera premiação. Não é possível reabrir banca encerrada nesta entrega. Se um avaliador abandonar uma banca aberta com pendências, cancele e prepare outra banca com a composição correta.
 
