@@ -93,9 +93,10 @@ export function ResultsModule({
         </h2>
         <p>
           Média ponderada pelos critérios de cada avaliação e média entre
-          avaliadores. Empates na média final de quatro casas decimais
-          compartilham a mesma posição; a exibição usa duas casas. Resultados
-          parciais ficam restritos à gestão.
+          avaliadores. Empates na média final de quatro casas decimais são
+          resolvidos pela maior média no critério prioritário da banca, quando
+          definido. Se persistir o empate, os projetos compartilham a posição;
+          a exibição usa duas casas. Resultados parciais ficam restritos à gestão.
         </p>
         {error && (
           <p role="alert" className="notice error">
