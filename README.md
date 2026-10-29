@@ -67,7 +67,7 @@ O pódio apresenta resultados encerrados, completos e publicados, com suspense, 
 
 Papéis pertencem ao vínculo institucional. Ser superadministrador não concede o papel de avaliador: são exigidos vínculo ativo explícito e designação para a banca. O avaliador pode revisar suas próprias notas enquanto a banca estiver aberta; após o encerramento, o banco bloqueia novos envios. Todas as operações protegidas verificam tokens, permissões e instituição no servidor/banco.
 
-Meta de custo: R$ 0 para desenvolvimento e demonstração. Nenhum plano pago foi contratado. O Render Free hiberna após inatividade e tem cotas compartilhadas de uso. O frontend apresenta espera e erros de conexão sem repetir automaticamente comandos de escrita. Vercel e Supabase também têm limites de uso. A IA generativa continua desativada; o guia de acesso tem respostas prontas identificadas como tal.
+Meta de custo: R$ 0 para desenvolvimento e demonstração. Nenhum plano pago foi contratado. O Render Free hiberna após inatividade e tem cotas compartilhadas de uso. O frontend apresenta espera e erros de conexão sem repetir automaticamente comandos de escrita. Vercel e Supabase também têm limites de uso. O assistente de IA foi removido; o acesso continua pelos links de orientação e pelo login com Google.
 
 O merge da branch `feat/login-accessibility` em `main` foi solicitado e realizado. Publicações em produção continuam sendo ações separadas; um merge não comprova que o site já recebeu o código novo.
 
