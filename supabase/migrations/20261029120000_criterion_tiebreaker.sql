@@ -142,6 +142,7 @@ $$;
 
 revoke all on function private.workspace_set_tiebreaker(uuid, uuid),
   private.freeze_tiebreaker_snapshot(),
+  private.clear_inactive_tiebreaker(),
   public.workspace_set_tiebreaker(uuid, uuid)
 from public, anon, authenticated;
 
