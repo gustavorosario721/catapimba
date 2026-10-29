@@ -54,7 +54,8 @@ export function CriteriaModule({
         <p>
           Notas de 1 a 5. Os critérios, pesos e descritores são congelados
           quando uma banca é aberta; mudanças posteriores valem para novas
-          bancas.
+          bancas. Um critério ativo pode ser definido como prioridade de
+          desempate; essa escolha vale para bancas abertas depois da alteração.
         </p>
         {data.criteria.map((c) => (
           <article key={c.id} className="workspace-criterion">
@@ -62,11 +63,23 @@ export function CriteriaModule({
               <h3>
                 {c.name} · peso {c.weight}
                 {!c.active ? " · Inativo" : ""}
+                {c.is_tiebreaker ? " · Desempate prioritário" : ""}
               </h3>
               {data.capabilities.manageCriteria && (
-                <button className="btn btn-ghost" onClick={() => edit(c)}>
-                  Editar critério
-                </button>
+                <div className="workspace-actions">
+                  {c.active && (
+                    <button
+                      className="btn btn-ghost"
+                      disabled={busy || c.is_tiebreaker}
+                      onClick={() => void command("criterion.tiebreaker", { id: c.id })}
+                    >
+                      {c.is_tiebreaker ? "Critério de desempate atual" : "Definir como desempate"}
+                    </button>
+                  )}
+                  <button className="btn btn-ghost" onClick={() => edit(c)}>
+                    Editar critério
+                  </button>
+                </div>
               )}
             </div>
             <ol>
